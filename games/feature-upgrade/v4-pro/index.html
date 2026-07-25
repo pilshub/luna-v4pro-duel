@@ -1,0 +1,797 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Signal Chain</title>
+<style>
+:root {
+  --bg: #0f1923;
+  --surface: #182433;
+  --text: #e2e8f0;
+  --muted: #8899aa;
+  --red: #e53e3e;
+  --red-dim: #7b2d2e;
+  --green: #38a169;
+  --green-bright: #48bb78;
+  --gold: #ecc94b;
+  --blue: #4299e1;
+  --radius: 16px;
+  --transition: 180ms ease;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+main {
+  width: 100%;
+  max-width: 520px;
+  padding: 24px 20px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  text-transform: uppercase;
+}
+
+/* ---- Best average banner ---- */
+#best-banner {
+  font-size: 0.85rem;
+  color: var(--muted);
+  min-height: 1.3em;
+}
+#best-banner strong { color: var(--gold); }
+
+/* ---- Round indicators ---- */
+#rounds {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+.round-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid #2d3a4a;
+  transition: background var(--transition), border-color var(--transition), transform var(--transition);
+}
+.round-dot.done { background: var(--green); border-color: var(--green); }
+.round-dot.false { background: var(--red); border-color: var(--red); }
+.round-dot.active { border-color: var(--text); transform: scale(1.35); }
+.round-dot.current-wait { border-color: var(--red); animation: pulse-dot 0.8s ease-in-out infinite; }
+.round-dot.current-react { border-color: var(--green-bright); animation: pulse-dot 0.4s ease-in-out infinite; }
+
+@keyframes pulse-dot {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.5); }
+}
+
+/* ---- Score line ---- */
+#score-line {
+  font-size: 0.95rem;
+  color: var(--muted);
+  min-height: 1.4em;
+  text-align: center;
+}
+#score-line strong { color: var(--text); font-variant-numeric: tabular-nums; }
+
+/* ---- Stage / pad ---- */
+#pad {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  max-height: 340px;
+  border-radius: var(--radius);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background-color 120ms ease, box-shadow var(--transition), transform 80ms ease;
+  position: relative;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+#pad:focus-visible {
+  box-shadow: 0 0 0 3px var(--blue);
+}
+
+/* Pad state colors */
+#pad.state-ready    { background: var(--surface); }
+#pad.state-waiting  { background: var(--red-dim); }
+#pad.state-react    { background: var(--green); box-shadow: 0 0 60px rgba(56,161,105,0.35); }
+#pad.state-false    { background: var(--red); animation: shake 0.35s ease; }
+#pad.state-result   { background: var(--surface); }
+#pad.state-done     { background: #1a2e1a; }
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-8px); }
+  30% { transform: translateX(8px); }
+  45% { transform: translateX(-6px); }
+  60% { transform: translateX(6px); }
+  75% { transform: translateX(-3px); }
+  90% { transform: translateX(3px); }
+}
+
+/* ---- Primary action button ---- */
+#action {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  background: transparent;
+  border: 2px solid rgba(255,255,255,0.25);
+  color: var(--text);
+  padding: 14px 36px;
+  border-radius: 99px;
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition), transform 80ms ease;
+  text-transform: uppercase;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  pointer-events: none;
+}
+#pad.state-ready #action,
+#pad.state-waiting #action,
+#pad.state-react #action,
+#pad.state-false #action,
+#pad.state-result #action {
+  pointer-events: auto;
+}
+#action:focus-visible {
+  box-shadow: 0 0 0 3px var(--blue);
+  border-color: var(--blue);
+}
+#action:active { transform: scale(0.95); }
+
+/* ---- Combo badge ---- */
+#combo {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--gold);
+  min-height: 1.3em;
+  transition: opacity 200ms ease;
+}
+#combo.flash { animation: combo-pop 0.4s ease; }
+@keyframes combo-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.4); }
+  100% { transform: scale(1); }
+}
+
+/* ---- Result message ---- */
+#result {
+  font-size: 1rem;
+  font-weight: 600;
+  min-height: 1.5em;
+  text-align: center;
+}
+#result.success { color: var(--green-bright); }
+
+/* ---- Start / Restart button ---- */
+#start-btn {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 12px 32px;
+  border: none;
+  border-radius: 99px;
+  background: var(--blue);
+  color: #fff;
+  cursor: pointer;
+  transition: background var(--transition), transform 80ms ease, box-shadow var(--transition);
+  text-transform: uppercase;
+  outline: none;
+}
+#start-btn:hover { background: #3182ce; }
+#start-btn:active { transform: scale(0.96); }
+#start-btn:focus-visible {
+  box-shadow: 0 0 0 3px rgba(66,153,225,0.5);
+}
+
+/* ---- Summary table ---- */
+#summary {
+  display: none;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+#summary.visible { display: table; }
+#summary th, #summary td {
+  padding: 6px 10px;
+  text-align: center;
+  border-bottom: 1px solid #1e2d3d;
+}
+#summary th { color: var(--muted); font-weight: 500; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.06em; }
+#summary .penalty { color: var(--red); }
+#summary .fast { color: var(--green-bright); }
+
+#summary-foot {
+  display: none;
+  width: 100%;
+  text-align: center;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+#summary-foot.visible { display: block; }
+#summary-foot .best { color: var(--gold); }
+#summary-foot .new-best { color: var(--green-bright); font-weight: 700; }
+
+/* ---- Responsive ---- */
+@media (max-width: 420px) {
+  main { padding: 16px 12px 24px; gap: 12px; }
+  h1 { font-size: 1.3rem; }
+  #action { font-size: 1.2rem; padding: 12px 28px; }
+  #pad { max-height: 280px; }
+}
+
+@media (min-width: 900px) {
+  #pad { max-height: 380px; }
+}
+</style>
+</head>
+<body>
+<main>
+  <h1>Signal Chain</h1>
+  <div id="best-banner" data-testid="score"></div>
+
+  <div id="rounds" aria-label="Round progress">
+    <span class="round-dot" data-round="1"></span>
+    <span class="round-dot" data-round="2"></span>
+    <span class="round-dot" data-round="3"></span>
+    <span class="round-dot" data-round="4"></span>
+    <span class="round-dot" data-round="5"></span>
+  </div>
+
+  <div id="score-line"></div>
+
+  <div id="pad" class="state-ready" data-testid="stage" tabindex="0" role="button" aria-label="Reaction pad">
+    <button id="action" data-testid="primary-action">Start</button>
+  </div>
+
+  <div id="combo"></div>
+  <p id="result-msg" data-testid="result"></p>
+
+  <button id="start-btn" data-testid="start">Start</button>
+
+  <table id="summary">
+    <thead><tr><th>Round</th><th>Time</th><th>Result</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <div id="summary-foot"></div>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── DOM refs ── */
+  const $pad      = document.getElementById('pad');
+  const $action   = document.getElementById('action');
+  const $result   = document.getElementById('result-msg');
+  const $scoreLine = document.getElementById('score-line');
+  const $bestBanner = document.getElementById('best-banner');
+  const $rounds   = document.getElementById('rounds');
+  const $combo    = document.getElementById('combo');
+  const $startBtn = document.getElementById('start-btn');
+  const $summary  = document.getElementById('summary');
+  const $summaryBody = $summary.querySelector('tbody');
+  const $summaryFoot = document.getElementById('summary-foot');
+  const $dots     = $rounds.querySelectorAll('.round-dot');
+
+  /* ── Constants ── */
+  const TOTAL_ROUNDS = 5;
+  const STORAGE_KEY  = 'bench.signal-chain-best-average';
+  const FAST_THRESHOLD = 280;   // ms — reactions under this build combo
+  const FALSE_START_PENALTY = 1000; // ms added to round time on false start
+
+  /* Wait-time ranges expand per round (min shrinks, max grows) */
+  const WAIT_RANGES = [
+    [1200, 2000],  // round 1
+    [900,  2600],  // round 2
+    [600,  3300],  // round 3
+    [400,  4000],  // round 4
+    [200,  5000],  // round 5
+  ];
+
+  /* ── State ── */
+  let phase       = 'ready';   // ready | waiting | react | false_start | round_result | completed
+  let currentRound = 0;
+  let rounds      = [];        // { number, time, penalty, valid }
+  let comboCount  = 0;
+  let bestAverage = null;
+  let waitTimer   = null;
+  let resultTimer = null;
+  let reactStart  = 0;
+  let waitStart   = 0;
+
+  /* ── Persistence ── */
+  function loadBest() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw !== null) { bestAverage = JSON.parse(raw); }
+    } catch (_) { bestAverage = null; }
+  }
+  function saveBest(avg) {
+    bestAverage = avg;
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(avg)); } catch (_) {}
+  }
+
+  /* ── UI helpers ── */
+  function setPadState(cls) {
+    $pad.className = 'state-' + cls;
+  }
+
+  function clearTimers() {
+    if (waitTimer)   { clearTimeout(waitTimer);   waitTimer   = null; }
+    if (resultTimer) { clearTimeout(resultTimer); resultTimer = null; }
+  }
+
+  function updateDots() {
+    $dots.forEach(function (dot, i) {
+      var rn = i + 1;
+      dot.className = 'round-dot';
+      if (rn < currentRound) {
+        var rd = rounds[i];
+        dot.classList.add(rd && rd.penalty ? 'false' : 'done');
+      } else if (rn === currentRound && (phase === 'waiting' || phase === 'react')) {
+        dot.classList.add(phase === 'waiting' ? 'current-wait' : 'current-react');
+      } else if (rn === currentRound && phase !== 'completed') {
+        dot.classList.add('active');
+      }
+    });
+  }
+
+  function updateScoreLine() {
+    if (phase === 'ready') {
+      $scoreLine.innerHTML = '';
+    } else if (phase === 'waiting') {
+      $scoreLine.innerHTML = 'Round <strong>' + currentRound + '</strong> of ' + TOTAL_ROUNDS + ' &mdash; wait for green';
+    } else if (phase === 'react') {
+      $scoreLine.innerHTML = 'Round <strong>' + currentRound + '</strong> of ' + TOTAL_ROUNDS + ' &mdash; <strong style="color:#48bb78">GO!</strong>';
+    } else if (phase === 'round_result' && rounds.length > 0) {
+      var last = rounds[rounds.length - 1];
+      if (last.penalty) {
+        $scoreLine.innerHTML = 'Round ' + last.number + ': <strong style="color:#e53e3e">+1000ms</strong> false start';
+      } else {
+        var cls = last.time < FAST_THRESHOLD ? 'style="color:#48bb78"' : '';
+        $scoreLine.innerHTML = 'Round ' + last.number + ': <strong ' + cls + '>' + last.time + ' ms</strong>';
+      }
+    } else if (phase === 'completed') {
+      var avg = computeAverage();
+      $scoreLine.innerHTML = 'Average: <strong>' + avg + ' ms</strong>';
+    } else {
+      $scoreLine.innerHTML = '';
+    }
+  }
+
+  function updateBestBanner() {
+    if (bestAverage !== null) {
+      $bestBanner.innerHTML = 'Best average: <strong>' + bestAverage + ' ms</strong>';
+    } else {
+      $bestBanner.innerHTML = 'Best average: <strong>&mdash;</strong>';
+    }
+  }
+
+  function updateCombo() {
+    if (comboCount >= 2) {
+      $combo.textContent = 'Combo x' + comboCount;
+      $combo.classList.remove('flash');
+      void $combo.offsetWidth;
+      $combo.classList.add('flash');
+    } else {
+      $combo.textContent = '';
+    }
+  }
+
+  function updateActionLabel() {
+    if (phase === 'ready') {
+      $action.textContent = 'Start';
+    } else if (phase === 'waiting') {
+      $action.textContent = 'WAIT';
+    } else if (phase === 'react') {
+      $action.textContent = 'GO!';
+    } else if (phase === 'false_start') {
+      $action.textContent = 'TOO SOON';
+    } else if (phase === 'round_result') {
+      $action.textContent = '...';
+    } else if (phase === 'completed') {
+      $action.textContent = 'DONE';
+    }
+  }
+
+  function updateStartButton() {
+    if (phase === 'ready' || phase === 'completed') {
+      $startBtn.textContent = phase === 'completed' ? 'Play Again' : 'Start';
+      $startBtn.style.display = '';
+    } else {
+      $startBtn.style.display = 'none';
+    }
+  }
+
+  function updateResult() {
+    $result.className = '';
+    if (phase === 'false_start') {
+      $result.textContent = 'Too soon! Penalty +' + FALSE_START_PENALTY + 'ms';
+      $result.className = '';
+    } else if (phase === 'completed') {
+      $result.textContent = 'All rounds complete!';
+      $result.className = 'success';
+    } else {
+      $result.textContent = '';
+    }
+  }
+
+  function refreshUI() {
+    updateDots();
+    updateScoreLine();
+    updateBestBanner();
+    updateCombo();
+    updateActionLabel();
+    updateStartButton();
+    updateResult();
+  }
+
+  /* ── Summary table ── */
+  function showSummary() {
+    $summaryBody.innerHTML = '';
+    for (var i = 0; i < rounds.length; i++) {
+      var rd = rounds[i];
+      var tr = document.createElement('tr');
+      var td1 = document.createElement('td');
+      td1.textContent = rd.number;
+      var td2 = document.createElement('td');
+      if (rd.penalty) {
+        td2.innerHTML = '<span class="penalty">+1000</span>';
+      } else {
+        td2.innerHTML = rd.time + ' ms' + (rd.time < FAST_THRESHOLD ? ' <span class="fast">&#9733;</span>' : '');
+      }
+      var td3 = document.createElement('td');
+      td3.textContent = rd.penalty ? 'False start' : 'OK';
+      if (rd.penalty) td3.className = 'penalty';
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tr.appendChild(td3);
+      $summaryBody.appendChild(tr);
+    }
+
+    var avg = computeAverage();
+    var bestRun = computeBestRun();
+    var falseCount = 0;
+    for (var j = 0; j < rounds.length; j++) { if (rounds[j].penalty) falseCount++; }
+
+    $summaryFoot.innerHTML =
+      'Average: <strong>' + avg + ' ms</strong><br>' +
+      'Best run: <strong>' + bestRun + ' ms</strong><br>' +
+      'Combo peak: <strong>' + comboCount + '</strong>';
+
+    if (bestAverage === null || avg < bestAverage) {
+      $summaryFoot.innerHTML += '<br><span class="new-best">New best average!</span>';
+    } else if (avg === bestAverage) {
+      $summaryFoot.innerHTML += '<br><span class="best">Tied best average</span>';
+    }
+
+    $summary.classList.add('visible');
+    $summaryFoot.classList.add('visible');
+  }
+
+  function hideSummary() {
+    $summary.classList.remove('visible');
+    $summaryFoot.classList.remove('visible');
+    $summaryBody.innerHTML = '';
+    $summaryFoot.innerHTML = '';
+  }
+
+  /* ── Computed stats ── */
+  function computeAverage() {
+    if (rounds.length === 0) return 0;
+    var sum = 0;
+    for (var i = 0; i < rounds.length; i++) {
+      var rd = rounds[i];
+      sum += rd.penalty ? FALSE_START_PENALTY : rd.time;
+    }
+    return Math.round(sum / rounds.length);
+  }
+
+  function computeBestRun() {
+    var best = Infinity;
+    for (var i = 0; i < rounds.length; i++) {
+      if (!rounds[i].penalty && rounds[i].time < best) best = rounds[i].time;
+    }
+    return best === Infinity ? 0 : best;
+  }
+
+  /* ── Round lifecycle ── */
+  function beginRound() {
+    clearTimers();
+
+    if (currentRound > TOTAL_ROUNDS) {
+      finishGame();
+      return;
+    }
+
+    phase = 'waiting';
+    setPadState('waiting');
+    refreshUI();
+
+    var range = WAIT_RANGES[currentRound - 1];
+    var minWait = range[0];
+    var maxWait = range[1];
+    var delay = minWait + Math.random() * (maxWait - minWait);
+
+    waitStart = performance.now();
+    waitTimer = setTimeout(goGreen, delay);
+  }
+
+  function goGreen() {
+    waitTimer = null;
+    phase = 'react';
+    reactStart = performance.now();
+    setPadState('react');
+    refreshUI();
+  }
+
+  /* ── Player action ── */
+  function handleAction() {
+    if (phase === 'ready') {
+      /* Treat as start */
+      startGame();
+      return;
+    }
+
+    if (phase === 'waiting') {
+      /* False start */
+      clearTimers();
+      phase = 'false_start';
+      setPadState('false');
+      refreshUI();
+
+      /* Record penalized round */
+      rounds.push({ number: currentRound, time: 0, penalty: true, valid: false });
+      comboCount = 0;
+
+      /* Recover after short delay */
+      resultTimer = setTimeout(function () {
+        resultTimer = null;
+        currentRound++;
+        beginRound();
+      }, 1400);
+      return;
+    }
+
+    if (phase === 'react') {
+      clearTimers();
+      var elapsed = Math.round(performance.now() - reactStart);
+
+      var isFast = elapsed < FAST_THRESHOLD;
+      if (isFast) {
+        comboCount++;
+      } else {
+        comboCount = 0;
+      }
+
+      rounds.push({ number: currentRound, time: elapsed, penalty: false, valid: true });
+
+      phase = 'round_result';
+      setPadState('result');
+      refreshUI();
+
+      /* Brief pause then next round */
+      resultTimer = setTimeout(function () {
+        resultTimer = null;
+        currentRound++;
+        beginRound();
+      }, 900);
+      return;
+    }
+
+    /* false_start, round_result, completed — no-op for action clicks */
+  }
+
+  /* ── Game start / finish / reset ── */
+  function startGame() {
+    clearTimers();
+    hideSummary();
+    rounds = [];
+    comboCount = 0;
+    currentRound = 1;
+    phase = 'waiting';
+    setPadState('waiting');
+    refreshUI();
+    beginRound();
+  }
+
+  function finishGame() {
+    clearTimers();
+    phase = 'completed';
+    setPadState('done');
+    refreshUI();
+    showSummary();
+
+    var avg = computeAverage();
+    if (bestAverage === null || avg < bestAverage) {
+      saveBest(avg);
+      updateBestBanner();
+    }
+  }
+
+  function resetGame() {
+    clearTimers();
+    hideSummary();
+    rounds = [];
+    comboCount = 0;
+    currentRound = 0;
+    phase = 'ready';
+    setPadState('ready');
+    refreshUI();
+  }
+
+  /* ── Force-complete for benchmark ── */
+  function forceComplete() {
+    clearTimers();
+
+    /* If not started, bootstrap */
+    if (phase === 'ready') {
+      rounds = [];
+      comboCount = 0;
+      currentRound = 1;
+      phase = 'waiting';
+    }
+
+    /* Fast-forward remaining rounds */
+    while (currentRound <= TOTAL_ROUNDS && phase !== 'completed') {
+      if (phase === 'waiting') {
+        /* Skip straight to green */
+        phase = 'react';
+        reactStart = performance.now() - 200; /* simulate 200ms reaction */
+      }
+      if (phase === 'react') {
+        var simTime = Math.round(180 + Math.random() * 80);
+        rounds.push({ number: currentRound, time: simTime, penalty: false, valid: true });
+        comboCount++;
+        phase = 'round_result';
+      }
+      if (phase === 'false_start') {
+        /* Process penalized round */
+        rounds.push({ number: currentRound, time: 0, penalty: true, valid: false });
+        comboCount = 0;
+        phase = 'round_result';
+      }
+      if (phase === 'round_result') {
+        currentRound++;
+        if (currentRound > TOTAL_ROUNDS) {
+          finishGame();
+          break;
+        }
+        phase = 'waiting';
+      }
+    }
+
+    /* Ensure completed state */
+    if (phase !== 'completed') {
+      finishGame();
+    }
+  }
+
+  /* ── Event binding ── */
+  $action.addEventListener('click', function (e) {
+    e.preventDefault();
+    handleAction();
+  });
+
+  $pad.addEventListener('click', function (e) {
+    if (e.target === $action) return; /* button handles itself */
+    e.preventDefault();
+    handleAction();
+  });
+
+  $startBtn.addEventListener('click', function (e) {
+    e.preventDefault();
+    if (phase === 'ready' || phase === 'completed') {
+      startGame();
+    }
+  });
+
+  document.addEventListener('keydown', function (e) {
+    /* Ignore if user is typing in an input (none exist, but future-proof) */
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+    if (e.code === 'Space' || e.code === 'Enter') {
+      e.preventDefault();
+
+      if (phase === 'ready') {
+        startGame();
+        return;
+      }
+      if (phase === 'completed') {
+        startGame();
+        return;
+      }
+
+      /* In-game: act */
+      handleAction();
+    }
+
+    if (e.code === 'KeyR' && (phase === 'completed' || phase === 'ready')) {
+      e.preventDefault();
+      if (phase === 'completed') startGame();
+      else if (phase === 'ready') startGame();
+    }
+  });
+
+  /* Keep pad focusable for keyboard a11y */
+  $pad.addEventListener('keydown', function (e) {
+    if (e.code === 'Space' || e.code === 'Enter') {
+      e.preventDefault();
+      handleAction();
+    }
+  });
+
+  /* ── Benchmark adapter ── */
+  window.__benchmark = {
+    start: function () {
+      if (phase === 'completed') { resetGame(); }
+      if (phase === 'ready')     { startGame(); }
+    },
+    act: function () {
+      handleAction();
+    },
+    complete: function () {
+      forceComplete();
+    },
+    reset: function () {
+      resetGame();
+    },
+    getState: function () {
+      /* Normalize phase for benchmark contract */
+      var mappedPhase = phase;
+      if (mappedPhase === 'false_start' || mappedPhase === 'round_result') {
+        mappedPhase = 'playing';
+      }
+
+      var progress = {
+        currentRound: currentRound,
+        totalRounds: TOTAL_ROUNDS,
+        rounds: rounds.map(function (r) {
+          return { number: r.number, time: r.time, penalty: r.penalty, valid: r.valid };
+        }),
+        comboCount: comboCount,
+        average: rounds.length > 0 ? computeAverage() : null,
+        bestRun: rounds.length > 0 ? computeBestRun() : null,
+        bestAverage: bestAverage
+      };
+
+      return {
+        phase: mappedPhase,
+        score: phase === 'completed' ? computeAverage() : (rounds.length > 0 ? rounds[rounds.length - 1].time : 0),
+        progress: progress
+      };
+    }
+  };
+
+  /* ── Init ── */
+  loadBest();
+  refreshUI();
+})();
+</script>
+</body>
+</html>
