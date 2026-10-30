@@ -123,12 +123,12 @@ class TitleScene {
       G.drawFeet(cx, 'zombie0', 236, 168 + 15 - k * 12, true);
       cx.restore();
     }
-    G.drawFeet(cx, Math.floor(t * 8) % 2 ? 'nico1' : 'nico2', 120, 166, false);
+    G.drawFeet(cx, Math.floor(t * 8) % 2 ? 'chico1' : 'chico2', 120, 166, false);
     G.ellipse(cx, 120, 166, 5, 1, '#00000080');
     cx.globalAlpha = 0.55; G.rect(cx, 70, 96, 180, 54, '#000'); cx.globalAlpha = 1;
     titleFont(cx, 'EL RETORNO', 160, 30 + Math.round(Math.sin(t * 2) * 1.5), 4);
     G.text(cx, 'UNA NOCHE CUALQUIERA. UNA CIUDAD CUALQUIERA.', 160, 66, C.lav, { align: 'center', shadow: true });
-    G.text(cx, 'AYUDA A NICO A VOLVER A CASA', 160, 78, C.white, { align: 'center', shadow: true });
+    G.text(cx, 'AYUDA AL CHICO A VOLVER A CASA', 160, 78, C.white, { align: 'center', shadow: true });
     this.menu.draw(cx);
     if (this.best) G.text(cx, 'RÉCORD: ' + this.best.name + ' · ' + this.best.score, 160, 158, C.yellow, { align: 'center', shadow: true });
     G.text(cx, G.Input.lastDevice === 'touch' ? 'TOCA "JUGAR" PARA EMPEZAR' : 'FLECHAS + ESPACIO · M = SONIDO', 160, 170, '#8a8aa8', { align: 'center', shadow: true });
@@ -144,7 +144,7 @@ class HowToScene {
     G.rect(cx, 0, 0, W, H, C.night);
     art.panel(cx, 8, 8, W - 16, H - 16, '#111d35', '#83769c');
     G.text(cx, 'CÓMO SE JUEGA', 160, 16, C.yellow, { align: 'center', shadow: true });
-    G.textBox(cx, 'La calle avanza sola. Lleva a Nico hasta casa esquivando todo lo que sale de repente. Si te tocan, pierdes un corazón.', 18, 30, 284, C.white, { lh: 10 });
+    G.textBox(cx, 'La calle avanza sola. Lleva al chico hasta casa esquivando todo lo que sale de repente. Si te tocan, pierdes un corazón.', 18, 30, 284, C.white, { lh: 10 });
     const rows = [
       ['mi_zombis', 'Cada noche son 6 tramos distintos, al azar.'],
       ['coin', 'Coge monedas: suman puntos.'],
@@ -177,7 +177,7 @@ class IntroScene {
   draw(cx) {
     this.bg.draw(cx, G.time, this.page >= 2 ? 30 : 8);
     if (this.page >= 2) { cx.globalAlpha = 0.2 + Math.sin(G.time * 8) * 0.1; G.rect(cx, 0, 0, W, H, C.plum); cx.globalAlpha = 1; }
-    G.drawFeet(cx, 'nico0', 120, 166, false);
+    G.drawFeet(cx, 'chico0', 120, 166, false);
     art.panel(cx, 16, 24, W - 32, 56, '#000000e0', '#83769c');
     const s = INTRO[this.page] || '';
     G.textBox(cx, typed(s, this.t), 26, 34, W - 52, C.white, { lh: 11 });
@@ -224,7 +224,7 @@ class EndScene {
     art.skyline(cx, W, 140, 3, '#141020', '#ffd27a');
     art.cobbles(cx, 0, 140, W, 40);
     G.rect(cx, 174, 112, 30, 48, '#2a1a10'); G.rect(cx, 176, 114, 26, 46, '#ffd27a');
-    G.drawFeet(cx, 'nico0', 150, 160, false);
+    G.drawFeet(cx, 'chico0', 150, 160, false);
     if (this.page < this.pages.length) {
       art.panel(cx, 16, 18, W - 32, 62, '#000000e0', C.yellow);
       G.textBox(cx, typed(this.pages[this.page], this.t), 26, 28, W - 52, C.white, { lh: 11 });
@@ -251,7 +251,7 @@ class GameOverScene {
   draw(cx) {
     G.rect(cx, 0, 0, W, H, '#0a0510');
     art.stars(cx, W, H, 66, G.time);
-    G.drawScaled(cx, 'nicoHurt', 145, 118, 3);
+    G.drawScaled(cx, 'chicoHurt', 145, 118, 3);
     G.text(cx, 'FIN DE LA NOCHE', 160, 18, C.red, { align: 'center', scale: 3, shadow: true, outline: true });
     G.textBox(cx, G.run.cause || 'Te quedaste por el camino.', 30, 48, 260, C.white, { align: 'center', lh: 10 });
     G.text(cx, 'LLEGASTE AL TRAMO ' + G.run.stage + ' DE ' + G.STAGES + ' · ' + G.run.coins + ' MONEDAS', 160, 80, C.lav, { align: 'center' });
@@ -268,8 +268,8 @@ class NameScene {
   constructor(score, won) { this.score = score; this.won = won; }
   enter() {
     this.t = 0;
-    this.name = (G.save.data.lastName || 'NICO').slice(0, MAXN);
-    this.cx = 0; this.cy = 4; this.bx = 2; this.fresh = true;
+    this.name = (G.save.data.lastName || '').slice(0, MAXN);
+    this.cx = 0; this.cy = this.name ? 4 : 0; this.bx = 2; this.fresh = true;
     this.sent = false;
   }
   onKey(e) {

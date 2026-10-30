@@ -5,8 +5,8 @@
 (function () {
 const S = G.defSprite, M = G.mirror, C = G.C;
 
-// ------------------------------------------------------------ Nico (el chico)
-const nicoTop = [
+// ------------------------------------------------------------ el chico (sin nombre)
+const chicoTop = [
   '...gggg...',
   '..gggggg..',
   '.gggggggg.',
@@ -19,11 +19,11 @@ const nicoTop = [
   '.99888ll..',
   '..8llll...'
 ];
-S('nico0', nicoTop.concat(['...mmmm...', '...m..m...', '...m..m...', '..77..77..']));
-S('nico1', nicoTop.concat(['...mmmm...', '..mm..m...', '..m....m..', '.77....77.']));
-S('nico2', nicoTop.concat(['...mmmm...', '...mmm....', '...m.m....', '..77.77...']));
-S('nicoJump', nicoTop.concat(['..mmmmm...', '.mm...mm..', '.77....77.', '..........']));
-S('nicoSlide', [
+S('chico0', chicoTop.concat(['...mmmm...', '...m..m...', '...m..m...', '..77..77..']));
+S('chico1', chicoTop.concat(['...mmmm...', '..mm..m...', '..m....m..', '.77....77.']));
+S('chico2', chicoTop.concat(['...mmmm...', '...mmm....', '...m.m....', '..77.77...']));
+S('chicoJump', chicoTop.concat(['..mmmmm...', '.mm...mm..', '.77....77.', '..........']));
+S('chicoSlide', [
   '.........gggg.',
   '........gggggg',
   '...8888.ggff0f',
@@ -33,7 +33,7 @@ S('nicoSlide', [
   '7mmmm.........',
   '77............'
 ]);
-S('nicoHurt', [
+S('chicoHurt', [
   '...gggg...', '..gggggg..', '.gggggggg.', '.ggg0ff0g.', '.ggff0ff..', '..gf00ff..',
   '8.988888.8', '8998888888', '.99888888.', '.99888ll..', '..8llll...', '...mmmm...', '..mm..mm..', '.mm....mm.', '77......77'
 ]);

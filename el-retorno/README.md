@@ -1,6 +1,6 @@
 # El Retorno
 
-Juego arcade en pixel art: la calle avanza sola y tienes que llevar a Nico a casa esquivando todo lo que sale de repente en una ciudad española de noche.
+Juego arcade en pixel art: la calle avanza sola y tienes que llevar al chico a casa esquivando todo lo que sale de repente en una ciudad española de noche.
 
 Cada partida es distinta: se eligen al azar 6 tramos entre 9 peligros, en orden aleatorio, con calles y patrones de ataque generados al momento. Al final te espera El Coco en tu portal.
 

@@ -1,6 +1,6 @@
 'use strict';
 // =====================================================================
-//  LA PARTIDA: la calle avanza sola y Nico esquiva lo que sale.
+//  LA PARTIDA: la calle avanza sola y el chico esquiva lo que sale.
 //  6 tramos al azar + El Coco en el portal de casa.
 // =====================================================================
 (function () {
@@ -107,8 +107,8 @@ class Street {
   draw(cx, cam) { for (const s of this.segs) cx.drawImage(s.c, Math.round(s.x - cam), 0); }
 }
 
-// ------------------------------------------------------------ Nico
-class Nico {
+// ------------------------------------------------------------ el chico
+class Chico {
   constructor() {
     this.x = 70; this.y = 110; this.face = 1; this.t = 0; this.inv = 1.2;
     this.dash = 0; this.dashCd = 0; this.dx = 1; this.dy = 0; this.speed = 90; this.moving = false;
@@ -136,7 +136,7 @@ class Nico {
   draw(cx) {
     G.ellipse(cx, this.x, this.y, 4, 1, '#00000080');
     if (this.inv > 0 && Math.floor(this.inv * 16) % 2) return;
-    const f = this.moving ? (Math.floor(this.t * 9) % 2 ? 'nico1' : 'nico2') : 'nico0';
+    const f = this.moving ? (Math.floor(this.t * 9) % 2 ? 'chico1' : 'chico2') : 'chico0';
     if (this.dash > 0) { cx.globalAlpha = 0.4; G.drawFeet(cx, f, this.x - this.dx * 7, this.y + 1 - this.dy * 7, this.face < 0, C.blue); cx.globalAlpha = 1; }
     G.drawFeet(cx, f, this.x, this.y + 1, this.face < 0);
   }
@@ -206,7 +206,7 @@ class GameScene {
     this.t = 0; this.cam = 0; this.v = 0; this.k = 0;
     this.street = new Street();
     this.street.ensure(0);
-    this.p = new Nico();
+    this.p = new Chico();
     this.hz = []; this.items = []; this.shots = []; this.queue = [];
     this.parts = new G.Particles();
     [this.fog, this.fogCtx] = G.makeCanvas(W, H);

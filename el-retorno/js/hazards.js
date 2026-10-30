@@ -2,7 +2,7 @@
 // =====================================================================
 //  PELIGROS y TRAMOS: todo lo que sale de repente por la calle
 //  Las coordenadas son de pantalla. Los objetos con ground:true se
-//  desplazan con la calle; (px, py) es el centro del cuerpo de Nico.
+//  desplazan con la calle; (px, py) es el centro del cuerpo del chico.
 // =====================================================================
 (function () {
 const C = G.C, W = G.W;
