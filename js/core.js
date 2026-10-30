@@ -362,12 +362,18 @@ function tinted(color) {
   x.fillRect(0, 0, c.width, c.height);
   return (font.tints[color] = c);
 }
-const norm = s => String(s).replace(/[“”«»]/g, '"').replace(/[‘’]/g, "'").replace(/–/g, '-').toUpperCase();
+const norm = s => String(s).replace(/[“”«»]/g, '"').replace(/[‘’]/g, "'").replace(/–/g, '-').replace(/\uFE0F/g, '').toUpperCase();
+// emotes que se pueden escribir en el nombre del récord (sus sprites 7x7 están en art.js)
+G.EMOTES = ['😀', '😎', '😂', '😱', '💀', '👻', '🧟', '🔥', '👑', '❤', '🦇', '🌙', '⭐', '🎃', '🐱', '🍕', '⚽', '🎸', '💩', '👍'];
+const EMO = {};
+G.EMOTES.forEach((e, i) => { EMO[e] = 'em' + i; });
+G.isEmote = ch => !!EMO[ch];
 G.textW = (str, scale = 1) => {
   str = norm(str);
   let w = 0;
   for (const ch of str) {
     if (ch === ' ') { w += 4; continue; }
+    if (EMO[ch]) { w += 8; continue; }
     const g = font.glyphs[ch] || font.glyphs['?'];
     w += g.w + 1;
   }
@@ -382,7 +388,7 @@ G.text = (cx, str, x, y, color = C.white, opt = {}) => {
   else if (opt.align === 'right') x -= w;
   x = Math.round(x); y = Math.round(y);
   if (opt.shadow) {
-    const o = Object.assign({}, opt, { shadow: null, align: 'left' });
+    const o = Object.assign({}, opt, { shadow: null, align: 'left', silhouette: true });
     const sc = opt.shadow === true ? C.black : opt.shadow;
     if (opt.outline) {
       for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1], [1, 1]]) G.text(cx, str, x + dx * scale, y + dy * scale, sc, o);
@@ -392,6 +398,12 @@ G.text = (cx, str, x, y, color = C.white, opt = {}) => {
   let px = x;
   for (const ch of str) {
     if (ch === ' ') { px += 4 * scale; continue; }
+    if (EMO[ch]) {
+      const e = G.spr(EMO[ch], false, opt.silhouette ? color : null);
+      if (e) cx.drawImage(e, px, y, 7 * scale, 7 * scale);
+      px += 8 * scale;
+      continue;
+    }
     const g = font.glyphs[ch] || font.glyphs['?'];
     cx.drawImage(img, g.x, 0, g.w, 11, px, y - 2 * scale, g.w * scale, 11 * scale);
     px += (g.w + 1) * scale;

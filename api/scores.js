@@ -17,9 +17,14 @@ async function redis(cmds) {
   return r.json();
 }
 
+// emotes que el juego deja poner en el nombre (mismo listado que G.EMOTES en js/core.js)
+const EMOTES = new Set(['😀', '😎', '😂', '😱', '💀', '👻', '🧟', '🔥', '👑', '❤', '🦇', '🌙', '⭐', '🎃', '🐱', '🍕', '⚽', '🎸', '💩', '👍']);
+
 function clean(b) {
   if (!b || typeof b !== 'object') return null;
-  const name = String(b.name || '').toUpperCase().replace(/[^A-Z0-9ÑÁÉÍÓÚÜ .!-]/g, '').trim().slice(0, 12);
+  const name = Array.from(String(b.name || '').toUpperCase().replace(/\uFE0F/g, ''))
+    .filter(ch => /[A-Z0-9ÑÁÉÍÓÚÜ .!-]/.test(ch) || EMOTES.has(ch))
+    .slice(0, 12).join('').trim();
   const score = Math.floor(Number(b.score));
   if (!name || !Number.isFinite(score) || score < 0 || score > 100000) return null;
   return {

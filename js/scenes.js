@@ -89,7 +89,7 @@ class TitleScene {
       { label: 'RÉCORDS', fn: () => G.go(new RankingScene(null)) },
       { label: 'CÓMO SE JUEGA', fn: () => G.go(new HowToScene()) },
       { label: 'SONIDO', right: G.audio.muted ? 'NO' : 'SÍ', fn: () => { G.audio.toggleMute(); this.menu.items[3].right = G.audio.muted ? 'NO' : 'SÍ'; }, sfx: 'move' }
-    ], { x: 90, y: 172, w: 110, lh: 16, align: 'center' });
+    ], { x: 90, y: 132, w: 110, lh: 16, align: 'center' });
     const sc = G.save.data.scores;
     this.best = sc && sc.length ? sc[0] : null;
     this.dt = 0;
@@ -104,11 +104,9 @@ class TitleScene {
     art.moon(cx, 150, 30, 9);
     titleFont(cx, 'EL', 90, 36 + Math.round(Math.sin(t * 2) * 1.5), 3);
     titleFont(cx, 'RETORNO', 90, 62 + Math.round(Math.sin(t * 2 + 0.6) * 1.5), 3);
-    G.textBox(cx, 'UNA NOCHE CUALQUIERA. UNA CIUDAD CUALQUIERA.', 14, 98, W - 28, C.lav, { align: 'center', shadow: true, lh: 10 });
-    G.textBox(cx, 'AYUDA AL CHICO A VOLVER A CASA', 14, 128, W - 28, C.white, { align: 'center', shadow: true, lh: 10 });
-    cx.globalAlpha = 0.6; G.rect(cx, 24, 162, W - 48, 70, '#000'); cx.globalAlpha = 1;
+    cx.globalAlpha = 0.6; G.rect(cx, 24, 122, W - 48, 70, '#000'); cx.globalAlpha = 1;
     this.menu.draw(cx);
-    if (this.best) G.text(cx, 'RÉCORD: ' + this.best.name + ' · ' + this.best.score, 90, 244, C.yellow, { align: 'center', shadow: true });
+    if (this.best) G.text(cx, 'RÉCORD: ' + this.best.name + ' · ' + this.best.score, 90, 212, C.yellow, { align: 'center', shadow: true });
     G.textBox(cx, G.Input.lastDevice === 'touch' ? 'TOCA "JUGAR" PARA EMPEZAR' : 'FLECHAS + ESPACIO · M = SONIDO', 10, 296, W - 20, '#9a9ab8', { align: 'center', shadow: true });
   }
 }
@@ -203,15 +201,19 @@ class GameOverScene {
 G.GameOverScene = GameOverScene;
 
 // ------------------------------------------------------------ ESCRIBIR NOMBRE (estilo recreativa)
-const KEYS = ['ABCDEFGHIJ', 'KLMNÑOPQRS', 'TUVWXYZ-.!', '0123456789'];
-const MAXN = 10, KX = 16, KY = 124, KW = 15, KH = 18;
+const KEYS = ['ABCDEFGHIJ', 'KLMNÑOPQRS', 'TUVWXYZ-.!', '0123456789'].map(r => Array.from(r))
+  .concat([G.EMOTES.slice(0, 10), G.EMOTES.slice(10, 20)]);
+const NR = KEYS.length, MAXN = 10, KX = 16, KY = 118, KW = 15, KH = 17;
+const rowY = j => KY + j * KH + (j >= 4 ? 12 : 0);
+const BY = rowY(NR - 1) + KH + 4;
 const BTNS = [['ESPACIO', 12, 54], ['BORRAR', 70, 46], ['OK', 120, 48]];
+const chars = s => Array.from(s);
 class NameScene {
   constructor(score, won) { this.score = score; this.won = won; }
   enter() {
     this.t = 0;
     this.name = (G.save.data.lastName || '').slice(0, MAXN);
-    this.cx = 0; this.cy = this.name ? 4 : 0; this.bx = 2; this.fresh = true;
+    this.cx = 0; this.cy = this.name ? NR : 0; this.bx = 2; this.fresh = true;
     this.sent = false;
   }
   onKey(e) {
@@ -219,14 +221,17 @@ class NameScene {
     const k = e.key;
     if (k === 'Enter') { this.submit(); return true; }
     if (k === 'Backspace') { this.erase(); return true; }
-    if (k.length === 1 && /[a-zA-Z0-9ñÑ\-\.! ]/.test(k)) { this.type(k.toUpperCase()); return true; }
+    // la barra espaciadora pulsa la tecla marcada (para elegir emotes); el espacio se escribe con ESPACIO
+    if (k.length === 1 && /[a-zA-Z0-9ñÑ\-\.!]/.test(k)) { this.type(k.toUpperCase()); return true; }
+    const emo = k.replace(/\uFE0F/g, '');
+    if (G.isEmote(emo)) { this.type(emo); return true; }
     return false;
   }
   type(ch) {
     if (this.fresh) { this.name = ''; this.fresh = false; }
-    if (this.name.length < MAXN) { this.name += ch; G.audio.sfx('move'); } else G.audio.sfx('deny');
+    if (chars(this.name).length < MAXN) { this.name += ch; G.audio.sfx('move'); } else G.audio.sfx('deny');
   }
-  erase() { this.fresh = false; this.name = this.name.slice(0, -1); G.audio.sfx('back'); }
+  erase() { this.fresh = false; this.name = chars(this.name).slice(0, -1).join(''); G.audio.sfx('back'); }
   submit() {
     const nm = this.name.trim();
     if (!nm) { G.audio.sfx('deny'); return; }
@@ -239,7 +244,7 @@ class NameScene {
     G.go(new RankingScene(entry));
   }
   press() {
-    if (this.cy < 4) this.type(KEYS[this.cy][this.cx]);
+    if (this.cy < NR) this.type(KEYS[this.cy][this.cx]);
     else if (this.bx === 0) this.type(' ');
     else if (this.bx === 1) this.erase();
     else this.submit();
@@ -248,18 +253,18 @@ class NameScene {
     this.t += dt;
     if (this.sent) return;
     const I = G.Input;
-    if (I.hit('left')) { if (this.cy < 4) this.cx = (this.cx + 9) % 10; else this.bx = (this.bx + 2) % 3; G.audio.sfx('move'); }
-    if (I.hit('right')) { if (this.cy < 4) this.cx = (this.cx + 1) % 10; else this.bx = (this.bx + 1) % 3; G.audio.sfx('move'); }
-    if (I.hit('up')) { this.cy = (this.cy + 4) % 5; G.audio.sfx('move'); }
-    if (I.hit('down')) { this.cy = (this.cy + 1) % 5; G.audio.sfx('move'); }
+    if (I.hit('left')) { if (this.cy < NR) this.cx = (this.cx + 9) % 10; else this.bx = (this.bx + 2) % 3; G.audio.sfx('move'); }
+    if (I.hit('right')) { if (this.cy < NR) this.cx = (this.cx + 1) % 10; else this.bx = (this.bx + 1) % 3; G.audio.sfx('move'); }
+    if (I.hit('up')) { this.cy = (this.cy + NR) % (NR + 1); G.audio.sfx('move'); }
+    if (I.hit('down')) { this.cy = (this.cy + 1) % (NR + 1); G.audio.sfx('move'); }
     if (I.hit('b')) this.erase();
     const tp = I.tap;
     if (tp) {
-      for (let j = 0; j < 4; j++) for (let i = 0; i < 10; i++) {
-        const x = KX + i * KW, y = KY + j * KH;
+      for (let j = 0; j < NR; j++) for (let i = 0; i < 10; i++) {
+        const x = KX + i * KW, y = rowY(j);
         if (tp.x >= x && tp.x < x + KW && tp.y >= y - 3 && tp.y < y + KH - 3) { this.cx = i; this.cy = j; this.press(); return; }
       }
-      BTNS.forEach(([, x, w], i) => { if (tp.x >= x && tp.x < x + w && tp.y >= 206 && tp.y < 222) { this.cy = 4; this.bx = i; this.press(); } });
+      BTNS.forEach(([, x, w], i) => { if (tp.x >= x && tp.x < x + w && tp.y >= BY && tp.y < BY + 16) { this.cy = NR; this.bx = i; this.press(); } });
       return;
     }
     if (I.hit('a')) this.press();
@@ -272,18 +277,19 @@ class NameScene {
     G.text(cx, 'TU NOMBRE:', 20, 84, C.lav);
     art.panel(cx, 16, 94, W - 32, 15, '#000', C.yellow);
     if (this.fresh && this.name) G.rect(cx, 21, 97, G.textW(this.name) + 2, 10, '#29adff80');
-    G.text(cx, this.name + (blink() && this.name.length < MAXN ? '_' : ''), 22, 98, C.white);
-    for (let j = 0; j < 4; j++) for (let i = 0; i < 10; i++) {
-      const x = KX + i * KW, y = KY + j * KH, sel = this.cy === j && this.cx === i;
-      G.rect(cx, x + 1, y - 3, KW - 2, KH - 4, sel ? C.yellow : '#1a1a33');
+    G.text(cx, this.name + (blink() && chars(this.name).length < MAXN ? '_' : ''), 22, 98, C.white);
+    for (let j = 0; j < NR; j++) for (let i = 0; i < 10; i++) {
+      const x = KX + i * KW, y = rowY(j), sel = this.cy === j && this.cx === i, emo = j >= 4;
+      G.rect(cx, x + 1, y - 3, KW - 2, KH - 3, sel ? C.yellow : emo ? '#24244a' : '#1a1a33');
       G.text(cx, KEYS[j][i], x + KW / 2, y + 1, sel ? C.ink : C.white, { align: 'center' });
     }
+    G.text(cx, 'EMOTES', 90, rowY(4) - 13, '#8a8aa8', { align: 'center' });
     BTNS.forEach(([l, x, w], i) => {
-      const sel = this.cy === 4 && this.bx === i;
-      G.rect(cx, x, 206, w, 16, sel ? (i === 2 ? C.green : C.yellow) : '#1a1a33');
-      G.text(cx, l, x + w / 2, 211, sel ? C.ink : i === 2 ? C.green : C.white, { align: 'center' });
+      const sel = this.cy === NR && this.bx === i;
+      G.rect(cx, x, BY, w, 16, sel ? (i === 2 ? C.green : C.yellow) : '#1a1a33');
+      G.text(cx, l, x + w / 2, BY + 5, sel ? C.ink : i === 2 ? C.green : C.white, { align: 'center' });
     });
-    G.textBox(cx, G.Input.lastDevice === 'touch' ? 'TOCA LAS LETRAS Y LUEGO OK' : 'ESCRIBE CON EL TECLADO Y PULSA ENTER', 14, 244, W - 28, '#9a9ab8', { align: 'center' });
+    G.textBox(cx, G.Input.lastDevice === 'touch' ? 'TOCA LETRAS Y EMOTES Y LUEGO OK' : 'ESCRIBE CON EL TECLADO. ESPACIO ELIGE EMOTE. ENTER GUARDA', 14, BY + 26, W - 28, '#9a9ab8', { align: 'center' });
   }
 }
 
@@ -352,7 +358,7 @@ class RankingScene {
         const col = me ? (blink() ? C.yellow : C.white) : i === 0 ? C.yellow : C.white;
         if (me) G.rect(cx, 9, y - 3, W - 18, 19, '#ffec2722');
         G.text(cx, String(i + 1), 18, y, col, { align: 'right' });
-        G.text(cx, String(e.name).slice(0, 12), 24, y, col);
+        G.text(cx, chars(String(e.name)).slice(0, 12).join(''), 24, y, col);
         G.text(cx, String(e.score), W - 12, y, col, { align: 'right' });
         G.text(cx, e.won ? '★ LLEGÓ A CASA' : 'TRAMO ' + (e.row || 0) + ' DE ' + G.STAGES, 24, y + 9, e.won ? C.green : '#8a8aa8');
       });
