@@ -34,16 +34,15 @@ Al acabar escribes tu nombre:
 
 ## Publicar en Vercel (elretorno.vercel.app)
 
-1. En Vercel: **Add New… → Project** e importa este repositorio.
-2. **Project Name**: `elretorno` (la URL será `elretorno.vercel.app` si el nombre está libre).
-3. **Root Directory**: `el-retorno`. Framework: *Other*. Sin comando de build.
-4. Deploy.
-5. (Opcional, ranking mundial) **Storage → Upstash for Redis**, conéctala al proyecto y vuelve a desplegar.
+El juego está en la raíz del repo y no necesita build: Vercel lo publica tal cual en cada push a `main`.
+
+1. En Vercel: **Add New… → Project** e importa este repositorio (Framework: *Other*, sin comando de build).
+2. **Project Name**: `elretorno`, o añade `elretorno.vercel.app` en **Settings → Domains** si está libre.
+3. (Opcional, ranking mundial) **Storage → Upstash for Redis**, conéctala al proyecto y vuelve a desplegar.
 
 ## Probar en local
 
 ```sh
-cd el-retorno
 python3 -m http.server 8000
 # abre http://localhost:8000
 ```
