@@ -64,7 +64,9 @@ const Input = G.Input = {
   down(k) { return !!(src.kb[k] || src.touch[k]); },
   hit(k) { return !!this.pressed[k]; },
   up(k) { return !!this.released[k]; },
+  analog: null,
   axis() {
+    if (this.analog) return { x: this.analog.x, y: this.analog.y };
     let x = (this.down('right') ? 1 : 0) - (this.down('left') ? 1 : 0);
     let y = (this.down('down') ? 1 : 0) - (this.down('up') ? 1 : 0);
     if (x && y) { x *= 0.7071; y *= 0.7071; }
@@ -96,7 +98,7 @@ window.addEventListener('keyup', e => {
   e.preventDefault();
   Input.set('kb', k, false);
 });
-window.addEventListener('blur', () => { src.kb = {}; src.touch = {}; });
+window.addEventListener('blur', () => { src.kb = {}; src.touch = {}; Input.analog = null; });
 
 // pantalla táctil / ratón sobre el canvas
 canvas.addEventListener('pointerdown', e => {
@@ -109,30 +111,58 @@ canvas.addEventListener('pointerdown', e => {
 function setupTouch() {
   const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
   if (isTouch) document.body.classList.add('touch');
-  const dpad = document.getElementById('dpad');
-  const parts = { up: dpad.querySelector('.u'), down: dpad.querySelector('.d'), left: dpad.querySelector('.l'), right: dpad.querySelector('.r') };
-  let dpadId = null;
-  const setDir = (e) => {
-    const r = dpad.getBoundingClientRect();
-    const dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
-    const len = Math.hypot(dx, dy) || 1;
-    const nx = dx / len, ny = dy / len, live = len > r.width * 0.08;
-    const st = { left: live && nx < -0.38, right: live && nx > 0.38, up: live && ny < -0.38, down: live && ny > 0.38 };
-    for (const k in st) { Input.set('touch', k, st[k]); parts[k].classList.toggle('on', st[k]); }
+  // joystick analógico flotante: aparece donde pones el dedo
+  const zone = document.getElementById('joy');
+  const base = zone.querySelector('.base'), knob = zone.querySelector('.knob');
+  let id = null, ox = 0, oy = 0;
+  const R = 44;
+  const dirs = (x, y) => {
+    const st = { left: x < -0.5, right: x > 0.5, up: y < -0.5, down: y > 0.5 };
+    for (const k in st) Input.set('touch', k, st[k]);
   };
-  const clearDir = () => { for (const k in parts) { Input.set('touch', k, false); parts[k].classList.remove('on'); } };
-  dpad.addEventListener('pointerdown', e => { dpadId = e.pointerId; dpad.setPointerCapture(e.pointerId); Input.lastDevice = 'touch'; setDir(e); e.preventDefault(); });
-  dpad.addEventListener('pointermove', e => { if (e.pointerId === dpadId) setDir(e); });
-  const endD = e => { if (e.pointerId === dpadId) { dpadId = null; clearDir(); } };
-  dpad.addEventListener('pointerup', endD);
-  dpad.addEventListener('pointercancel', endD);
+  const move = e => {
+    const r = zone.getBoundingClientRect();
+    let dx = e.clientX - r.left - ox, dy = e.clientY - r.top - oy;
+    const len = Math.hypot(dx, dy);
+    if (len > R) { dx *= R / len; dy *= R / len; }
+    knob.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
+    let ax = dx / R, ay = dy / R;
+    if (Math.hypot(ax, ay) < 0.15) { ax = 0; ay = 0; }
+    Input.analog = { x: ax, y: ay };
+    dirs(ax, ay);
+  };
+  const end = e => {
+    if (e.pointerId !== id) return;
+    id = null;
+    Input.analog = null;
+    dirs(0, 0);
+    knob.style.transform = '';
+    base.style.left = ''; base.style.top = '';
+    zone.classList.remove('active');
+  };
+  zone.addEventListener('pointerdown', e => {
+    if (id !== null) return;
+    id = e.pointerId;
+    try { zone.setPointerCapture(id); } catch (err) { /* sin captura */ }
+    const r = zone.getBoundingClientRect();
+    ox = e.clientX - r.left; oy = e.clientY - r.top;
+    base.style.left = ox + 'px'; base.style.top = oy + 'px';
+    zone.classList.add('active');
+    Input.lastDevice = 'touch';
+    G.audio.init();
+    move(e);
+    e.preventDefault();
+  });
+  zone.addEventListener('pointermove', e => { if (e.pointerId === id) move(e); });
+  zone.addEventListener('pointerup', end);
+  zone.addEventListener('pointercancel', end);
   document.querySelectorAll('#ab .btn').forEach(b => {
     const k = b.dataset.k;
     b.addEventListener('pointerdown', e => { b.setPointerCapture(e.pointerId); Input.lastDevice = 'touch'; Input.set('touch', k, true); b.classList.add('on'); e.preventDefault(); });
-    const end = () => { Input.set('touch', k, false); b.classList.remove('on'); };
-    b.addEventListener('pointerup', end);
-    b.addEventListener('pointercancel', end);
-    b.addEventListener('lostpointercapture', end);
+    const up = () => { Input.set('touch', k, false); b.classList.remove('on'); };
+    b.addEventListener('pointerup', up);
+    b.addEventListener('pointercancel', up);
+    b.addEventListener('lostpointercapture', up);
   });
   document.getElementById('btn-pause').addEventListener('pointerdown', e => { Input.pressed.pause = true; e.preventDefault(); });
   document.getElementById('btn-mute').addEventListener('click', () => { G.audio.init(); G.audio.toggleMute(); });
@@ -610,8 +640,9 @@ G.scene = null;
 let pendingScene = null, trans = 0, transDir = 0;
 G.shakeT = 0; G.shakeA = 0; G.flashT = 0; G.flashC = C.red;
 G.time = 0;
+let queuedScene = null;
 G.go = (scene) => {
-  if (pendingScene) return;
+  if (pendingScene) { if (transDir < 0) queuedScene = scene; return; }
   pendingScene = scene;
   transDir = 1;
   trans = 0;
@@ -652,6 +683,7 @@ function frame(now) {
       transDir = -1; trans = 1;
     } else if (transDir < 0 && trans <= 0) {
       pendingScene = null; transDir = 0; trans = 0;
+      if (queuedScene) { const q = queuedScene; queuedScene = null; G.go(q); }
     }
   } else if (G.scene && G.scene.update) {
     G.scene.update(dt);

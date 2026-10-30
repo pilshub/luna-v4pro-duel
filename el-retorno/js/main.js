@@ -10,29 +10,18 @@ G.resize();
 const b = document.getElementById('btn-mute');
 if (b) b.textContent = G.audio.muted ? '×' : '♪';
 
-// atajos de prueba: ?game=zombis&d=0.5  ·  ?scene=map|shop|rest|event|end|over|name|rank
+// atajos de prueba: ?tema=zombis,volcan (empieza la partida con esos tramos) · ?tema=coco (directo al jefe)
+//                   ?scene=end|over|name|rank|intro|howto|game
 const q = new URLSearchParams(location.search);
 let first = new G.TitleScene();
-if (q.get('game') && G.GAMES[q.get('game')]) {
+const s = q.get('scene');
+if (q.get('tema')) {
   G.newRun();
-  const d = parseFloat(q.get('d') || '0.3');
-  const id = q.get('game');
-  const n = G.run.map.nodes.find(x => x.row === Math.min(8, Math.round(d * 8))) || G.run.map.nodes[0];
-  n.type = id === 'coco' ? 'boss' : 'game'; n.game = id;
-  if (id === 'coco') n.id = G.run.map.nodes[G.run.map.nodes.length - 1].id;
-  first = q.get('card') ? new G.CardScene(n, d) : new G.MinigameScene(n, G.GAMES[id], d);
-} else if (q.get('scene')) {
+  G.debugThemes = q.get('tema').split(',');
+  first = new G.GameScene();
+} else if (s && G.debugScenes[s]) {
   G.newRun();
-  const s = q.get('scene');
-  const r = G.run;
-  if (q.get('items')) q.get('items').split(',').forEach(i => G.giveItem(i));
-  if (s === 'map') first = new G.MapScene();
-  else {
-    const n = r.map.nodes.find(x => x.row === 3) || r.map.nodes[0];
-    r.node = n.id; r.row = n.row;
-    const scenes = G.debugScenes || {};
-    if (scenes[s]) first = scenes[s](n);
-  }
+  first = G.debugScenes[s]();
 }
 G.start(first);
 })();
