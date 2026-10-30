@@ -137,7 +137,7 @@ class HowToScene {
     y += G.textBox(cx, 'Joystick para moverte (donde pongas el dedo). Botón A para esquivar.', 14, y, W - 28, C.lav, { lh: 10 }) + 6;
     G.text(cx, 'TECLADO', 14, y, C.green); y += 11;
     G.textBox(cx, 'Flechas o WASD para moverte. Espacio para esquivar. P pausa. M sonido.', 14, y, W - 28, C.lav, { lh: 10 });
-    if (blink()) G.text(cx, 'A: VOLVER', 90, 298, C.yellow, { align: 'center' });
+    G.text(cx, 'A: VOLVER', 90, 298, C.yellow, { align: 'center' });
   }
 }
 
@@ -157,8 +157,8 @@ class EndScene {
   }
   update(dt) {
     this.t += dt;
-    if (!G.Input.anyHit() || this.t < 0.4) return;
-    if (this.t < 0.4 + this.lines.length * 0.3) { this.t = 99; return; }
+    if (!G.Input.anyHit() || this.t < 0.8) return;
+    if (this.t < 0.8 + this.lines.length * 0.3) { this.t = 99; return; }
     G.go(new NameScene(this.total, true));
   }
   draw(cx) {
@@ -176,7 +176,7 @@ class EndScene {
       G.text(cx, 'TOTAL', 90, y + 8, C.lav, { align: 'center' });
       G.text(cx, String(this.total), 90, y + 20, C.yellow, { align: 'center', scale: 2, shadow: true });
       G.text(cx, G.run.coins + ' MONEDAS', 90, y + 42, C.lav, { align: 'center' });
-      if (blink()) G.textBox(cx, 'PULSA A PARA GUARDAR TU NOMBRE', 20, 278, W - 40, C.white, { align: 'center' });
+      G.textBox(cx, 'PULSA A PARA GUARDAR TU NOMBRE', 20, 278, W - 40, C.white, { align: 'center' });
     }
   }
 }
@@ -195,7 +195,7 @@ class GameOverScene {
     G.text(cx, G.run.coins + ' MONEDAS', 90, 186, C.lav, { align: 'center' });
     G.text(cx, 'PUNTOS', 90, 206, C.yellow, { align: 'center' });
     G.text(cx, String(this.total), 90, 218, C.yellow, { align: 'center', scale: 2, shadow: true });
-    if (this.t > 1 && blink()) G.textBox(cx, 'PULSA A PARA GUARDAR TU NOMBRE', 20, 280, W - 40, C.white, { align: 'center' });
+    if (this.t > 1) G.textBox(cx, 'PULSA A PARA GUARDAR TU NOMBRE', 20, 280, W - 40, C.white, { align: 'center' });
   }
 }
 G.GameOverScene = GameOverScene;
@@ -213,11 +213,11 @@ class NameScene {
   enter() {
     this.t = 0;
     this.name = (G.save.data.lastName || '').slice(0, MAXN);
-    this.cx = 0; this.cy = this.name ? NR : 0; this.bx = 2; this.fresh = true;
+    this.cx = 0; this.cy = this.name ? NR : 0; this.bx = 2;
     this.sent = false;
   }
   onKey(e) {
-    if (this.sent) return false;
+    if (this.sent || this.t < 0.6) return false;
     const k = e.key;
     if (k === 'Enter') { this.submit(); return true; }
     if (k === 'Backspace') { this.erase(); return true; }
@@ -228,10 +228,9 @@ class NameScene {
     return false;
   }
   type(ch) {
-    if (this.fresh) { this.name = ''; this.fresh = false; }
     if (chars(this.name).length < MAXN) { this.name += ch; G.audio.sfx('move'); } else G.audio.sfx('deny');
   }
-  erase() { this.fresh = false; this.name = chars(this.name).slice(0, -1).join(''); G.audio.sfx('back'); }
+  erase() { this.name = chars(this.name).slice(0, -1).join(''); G.audio.sfx('back'); }
   submit() {
     const nm = this.name.trim();
     if (!nm) { G.audio.sfx('deny'); return; }
@@ -251,7 +250,7 @@ class NameScene {
   }
   update(dt) {
     this.t += dt;
-    if (this.sent) return;
+    if (this.sent || this.t < 0.6) return;
     const I = G.Input;
     if (I.hit('left')) { if (this.cy < NR) this.cx = (this.cx + 9) % 10; else this.bx = (this.bx + 2) % 3; G.audio.sfx('move'); }
     if (I.hit('right')) { if (this.cy < NR) this.cx = (this.cx + 1) % 10; else this.bx = (this.bx + 1) % 3; G.audio.sfx('move'); }
@@ -276,7 +275,6 @@ class NameScene {
     G.text(cx, 'PUNTOS', 90, 64, C.green, { align: 'center' });
     G.text(cx, 'TU NOMBRE:', 20, 84, C.lav);
     art.panel(cx, 16, 94, W - 32, 15, '#000', C.yellow);
-    if (this.fresh && this.name) G.rect(cx, 21, 97, G.textW(this.name) + 2, 10, '#29adff80');
     G.text(cx, this.name + (blink() && chars(this.name).length < MAXN ? '_' : ''), 22, 98, C.white);
     for (let j = 0; j < NR; j++) for (let i = 0; i < 10; i++) {
       const x = KX + i * KW, y = rowY(j), sel = this.cy === j && this.cx === i, emo = j >= 4;
