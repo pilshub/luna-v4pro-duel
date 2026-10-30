@@ -22,15 +22,9 @@ Cada partida es distinta: se eligen al azar 6 tramos entre 9 peligros, en orden 
 - Móvil: joystick analógico (donde pongas el dedo) + botón **A** para esquivar.
 - Teclado: flechas o WASD, **Espacio** para esquivar, **P** pausa, **M** sonido.
 
-## Puntuación y ranking
+## Puntuación
 
-Suman puntos los metros recorridos, las monedas, cada tramo superado (más si es sin golpes), cada chanclazo a El Coco y llegar a casa.
-Al acabar escribes tu nombre, con emotes pixel si quieres (😎 🔥 👑 💀 👻…):
-
-- **Este dispositivo**: siempre, en `localStorage`.
-- **Mundial**: si el proyecto de Vercel tiene una base de datos Redis (Upstash) conectada.
-  La función `api/scores.js` usa `KV_REST_API_URL` / `KV_REST_API_TOKEN`
-  (o `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`). Sin ellas, el juego usa el ranking local.
+Suman puntos los metros recorridos, las monedas, cada tramo superado (más si es sin golpes), cada chanclazo a El Coco y llegar a casa. Los puntos se ven al terminar la partida.
 
 ## Publicar en Vercel (elretorno.vercel.app)
 
@@ -38,7 +32,6 @@ El juego está en la raíz del repo y no necesita build: Vercel lo publica tal c
 
 1. En Vercel: **Add New… → Project** e importa este repositorio (Framework: *Other*, sin comando de build).
 2. **Project Name**: `elretorno`, o añade `elretorno.vercel.app` en **Settings → Domains** si está libre.
-3. (Opcional, ranking mundial) **Storage → Upstash for Redis**, conéctala al proyecto y vuelve a desplegar.
 
 ## Probar en local
 
@@ -47,4 +40,4 @@ python3 -m http.server 8000
 # abre http://localhost:8000
 ```
 
-Atajos de prueba: `?tema=zombis,volcan` empieza con esos tramos, `?tema=coco` va directo al jefe, `?scene=end|over|name|rank|howto`.
+Atajos de prueba: `?tema=zombis,volcan` empieza con esos tramos, `?tema=coco` va directo al jefe, `?scene=end|over|howto`.
