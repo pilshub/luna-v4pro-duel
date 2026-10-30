@@ -1,6 +1,6 @@
 'use strict';
 // =====================================================================
-//  ESCENAS: título, cómo se juega, intro, finales, nombre y ranking
+//  ESCENAS (vertical 9:16): título, cómo se juega, finales, nombre y récords
 // =====================================================================
 (function () {
 const C = G.C, W = G.W, H = G.H, art = G.art;
@@ -64,34 +64,17 @@ const titleFont = (cx, str, x, y, scale, col = C.yellow, sh = C.dred) => {
   G.text(cx, str, x, y + scale, '#000', { align: 'center', scale });
   G.text(cx, str, x, y, col, { align: 'center', scale, shadow: sh, outline: true });
 };
-const typed = (str, t, speed = 45) => str.slice(0, Math.floor(t * speed));
-const startRun = () => { G.newRun(); G.go(new IntroScene()); };
+const blink = () => Math.floor(G.time * 3) % 2;
+const startRun = () => { G.newRun(); G.go(new G.GameScene()); };
+const night = (cx, seed) => { G.rect(cx, 0, 0, W, H, C.night); art.stars(cx, W, H, seed, G.time); };
 
-// ------------------------------------------------------------ fondo de calle animado
+// calle que sube sola de fondo (título)
 class StreetBg {
-  constructor(seed = 1) {
-    [this.sky, this.skx] = G.makeCanvas(W, H);
-    art.sky(this.skx, W, H);
-    art.moon(this.skx, 300, 22, 11);
-    [this.far, this.fx] = G.makeCanvas(W * 2, H);
-    art.skyline(this.fx, W * 2, 128, seed + 5, '#141838', '#3a3060');
-    [this.row, this.rx] = G.makeCanvas(W * 2, H);
-    let bx = 0, s = seed * 100;
-    while (bx < W * 2) { const w = G.irand(70, 100); art.facade(this.rx, bx, G.irand(54, 74), w, 146 - 60, s++); bx += w; }
-    art.tiles(this.rx, 0, 146, W * 2, 8);
-    art.cobbles(this.rx, 0, 154, W * 2, 26, '#24222f', '#1b1a24', '#2e2c3c');
-    for (let i = 40; i < W * 2; i += 106) art.lamp(this.rx, i, 150, true, 46);
-  }
-  draw(cx, t, speed = 14) {
-    cx.drawImage(this.sky, 0, 0);
-    art.stars(cx, W, 70, 9, t);
-    const f = Math.floor(t * speed * 0.3) % (W * 2 - W), r = Math.floor(t * speed) % W;
-    cx.drawImage(this.far, f % W, 0, W, H, 0, 0, W, H);
-    cx.drawImage(this.row, r, 0, W, H, 0, 0, W, H);
-    for (let i = 40; i < W * 2; i += 106) {
-      const x = i - r;
-      if (x > -40 && x < W + 40) art.lightCone(cx, x, 104, 154, 22, 0.12);
-    }
+  constructor() { this.street = new G.Street(); this.cam = 0; this.street.ensure(0); }
+  draw(cx, dt) {
+    this.cam += dt * 22;
+    this.street.ensure(this.cam);
+    this.street.draw(cx, this.cam);
   }
 }
 
@@ -99,39 +82,34 @@ class StreetBg {
 class TitleScene {
   enter() {
     this.t = 0;
-    this.bg = new StreetBg(3);
+    this.bg = new StreetBg();
     G.audio.play('night');
     this.menu = new Menu([
       { label: 'JUGAR', fn: startRun },
       { label: 'RÉCORDS', fn: () => G.go(new RankingScene(null)) },
       { label: 'CÓMO SE JUEGA', fn: () => G.go(new HowToScene()) },
       { label: 'SONIDO', right: G.audio.muted ? 'NO' : 'SÍ', fn: () => { G.audio.toggleMute(); this.menu.items[3].right = G.audio.muted ? 'NO' : 'SÍ'; }, sfx: 'move' }
-    ], { x: 160, y: 104, w: 120, lh: 12, align: 'center' });
+    ], { x: 90, y: 172, w: 110, lh: 16, align: 'center' });
     const sc = G.save.data.scores;
     this.best = sc && sc.length ? sc[0] : null;
+    this.dt = 0;
   }
-  update(dt) { this.t += dt; this.menu.update(); }
+  update(dt) { this.t += dt; this.dt = dt; this.menu.update(); }
   draw(cx) {
     const t = this.t;
-    this.bg.draw(cx, t);
-    // un zombi asoma por la alcantarilla de vez en cuando
-    const zk = t % 9;
-    G.ellipse(cx, 236, 168, 9, 2, '#111');
-    if (zk > 5 && zk < 8) {
-      const k = Math.sin((zk - 5) / 3 * Math.PI);
-      cx.save(); cx.beginPath(); cx.rect(220, 140, 34, 28); cx.clip();
-      G.drawFeet(cx, 'zombie0', 236, 168 + 15 - k * 12, true);
-      cx.restore();
-    }
-    G.drawFeet(cx, Math.floor(t * 8) % 2 ? 'chico1' : 'chico2', 120, 166, false);
-    G.ellipse(cx, 120, 166, 5, 1, '#00000080');
-    cx.globalAlpha = 0.55; G.rect(cx, 70, 96, 180, 54, '#000'); cx.globalAlpha = 1;
-    titleFont(cx, 'EL RETORNO', 160, 30 + Math.round(Math.sin(t * 2) * 1.5), 4);
-    G.text(cx, 'UNA NOCHE CUALQUIERA. UNA CIUDAD CUALQUIERA.', 160, 66, C.lav, { align: 'center', shadow: true });
-    G.text(cx, 'AYUDA AL CHICO A VOLVER A CASA', 160, 78, C.white, { align: 'center', shadow: true });
+    this.bg.draw(cx, this.dt);
+    cx.globalAlpha = 0.5; G.rect(cx, 0, 0, W, H, '#05050f'); cx.globalAlpha = 1;
+    G.ellipse(cx, 90, 262, 5, 1, '#00000080');
+    G.drawFeet(cx, Math.floor(t * 8) % 2 ? 'chicoBack1' : 'chicoBack2', 90, 262, false);
+    art.moon(cx, 150, 30, 9);
+    titleFont(cx, 'EL', 90, 36 + Math.round(Math.sin(t * 2) * 1.5), 3);
+    titleFont(cx, 'RETORNO', 90, 62 + Math.round(Math.sin(t * 2 + 0.6) * 1.5), 3);
+    G.textBox(cx, 'UNA NOCHE CUALQUIERA. UNA CIUDAD CUALQUIERA.', 14, 98, W - 28, C.lav, { align: 'center', shadow: true, lh: 10 });
+    G.textBox(cx, 'AYUDA AL CHICO A VOLVER A CASA', 14, 128, W - 28, C.white, { align: 'center', shadow: true, lh: 10 });
+    cx.globalAlpha = 0.6; G.rect(cx, 24, 162, W - 48, 70, '#000'); cx.globalAlpha = 1;
     this.menu.draw(cx);
-    if (this.best) G.text(cx, 'RÉCORD: ' + this.best.name + ' · ' + this.best.score, 160, 158, C.yellow, { align: 'center', shadow: true });
-    G.text(cx, G.Input.lastDevice === 'touch' ? 'TOCA "JUGAR" PARA EMPEZAR' : 'FLECHAS + ESPACIO · M = SONIDO', 160, 170, '#8a8aa8', { align: 'center', shadow: true });
+    if (this.best) G.text(cx, 'RÉCORD: ' + this.best.name + ' · ' + this.best.score, 90, 244, C.yellow, { align: 'center', shadow: true });
+    G.textBox(cx, G.Input.lastDevice === 'touch' ? 'TOCA "JUGAR" PARA EMPEZAR' : 'FLECHAS + ESPACIO · M = SONIDO', 10, 296, W - 20, '#9a9ab8', { align: 'center', shadow: true });
   }
 }
 G.TitleScene = TitleScene;
@@ -142,128 +120,92 @@ class HowToScene {
   update(dt) { this.t += dt; if (this.t > 0.3 && G.Input.anyHit()) G.go(new TitleScene()); }
   draw(cx) {
     G.rect(cx, 0, 0, W, H, C.night);
-    art.panel(cx, 8, 8, W - 16, H - 16, '#111d35', '#83769c');
-    G.text(cx, 'CÓMO SE JUEGA', 160, 16, C.yellow, { align: 'center', shadow: true });
-    G.textBox(cx, 'La calle avanza sola. Lleva al chico hasta casa esquivando todo lo que sale de repente. Si te tocan, pierdes un corazón.', 18, 30, 284, C.white, { lh: 10 });
+    art.panel(cx, 6, 8, W - 12, H - 16, '#111d35', '#83769c');
+    G.text(cx, 'CÓMO SE JUEGA', 90, 18, C.yellow, { align: 'center', shadow: true });
+    let y = 34;
+    y += G.textBox(cx, 'La calle avanza sola. Lleva al chico hasta casa esquivando todo lo que sale. Si te toca algo, pierdes un corazón.', 14, y, W - 28, C.white, { lh: 10 }) + 8;
     const rows = [
-      ['mi_zombis', 'Cada noche son 6 tramos distintos, al azar.'],
-      ['coin', 'Coge monedas: suman puntos.'],
-      ['it_bocadillo', 'Los bocadillos te dan un corazón.'],
-      ['chanclaP', 'Al final, El Coco: coge chanclas y se las tiras.']
+      ['mi_zombis', 'Cada partida: 6 tramos distintos, al azar.'],
+      ['coin', 'Las monedas suman puntos.'],
+      ['it_bocadillo', 'Los bocadillos dan un corazón.'],
+      ['chanclaP', 'Al final, El Coco: coge chanclas y se lanzan solas.']
     ];
-    rows.forEach(([ic, tx], i) => { art.icon(cx, ic, 18, 66 + i * 14, 1); G.text(cx, tx, 34, 68 + i * 14, C.white); });
-    G.textBox(cx, 'MÓVIL: joystick para moverte, botón A para esquivar.\nTECLADO: flechas o WASD para moverte, ESPACIO para esquivar, P pausa, M sonido.', 18, 126, 284, C.lav, { lh: 10 });
-    G.text(cx, 'A: VOLVER', W - 18, 164, C.yellow, { align: 'right' });
-  }
-}
-
-// ------------------------------------------------------------ INTRO
-const INTRO = [
-  'Sábado, 00:40.\nSales del cumpleaños de Rubén, en la otra punta de la ciudad.',
-  'Tu madre fue muy clara:\n"A la una en casa. NI UN MINUTO MÁS."',
-  'Pero esta noche la ciudad está rara.\nMuy, muy rara...'
-];
-class IntroScene {
-  enter() { this.t = 0; this.page = 0; this.bg = new StreetBg(7); G.audio.play('night'); }
-  update(dt) {
-    this.t += dt;
-    if (G.Input.anyHit()) {
-      const full = typed(INTRO[this.page], this.t).length >= INTRO[this.page].length;
-      if (!full) { this.t = 99; return; }
-      this.page++; this.t = 0; G.audio.sfx('move');
-      if (this.page >= INTRO.length) G.go(new G.GameScene());
+    for (const [ic, tx] of rows) {
+      art.icon(cx, ic, 14, y - 2, 1);
+      y += G.textBox(cx, tx, 30, y, W - 44, C.white, { lh: 10 }) + 6;
     }
-  }
-  draw(cx) {
-    this.bg.draw(cx, G.time, this.page >= 2 ? 30 : 8);
-    if (this.page >= 2) { cx.globalAlpha = 0.2 + Math.sin(G.time * 8) * 0.1; G.rect(cx, 0, 0, W, H, C.plum); cx.globalAlpha = 1; }
-    G.drawFeet(cx, 'chico0', 120, 166, false);
-    art.panel(cx, 16, 24, W - 32, 56, '#000000e0', '#83769c');
-    const s = INTRO[this.page] || '';
-    G.textBox(cx, typed(s, this.t), 26, 34, W - 52, C.white, { lh: 11 });
-    if (typed(s, this.t).length >= s.length && Math.floor(G.time * 3) % 2) G.text(cx, '↓', W - 28, 68, C.yellow);
-    G.text(cx, 'A: SEGUIR', W - 8, 170, '#8a8aa8', { align: 'right', shadow: true });
+    y += 6;
+    G.text(cx, 'MÓVIL', 14, y, C.green); y += 11;
+    y += G.textBox(cx, 'Joystick para moverte (donde pongas el dedo). Botón A para esquivar.', 14, y, W - 28, C.lav, { lh: 10 }) + 6;
+    G.text(cx, 'TECLADO', 14, y, C.green); y += 11;
+    G.textBox(cx, 'Flechas o WASD para moverte. Espacio para esquivar. P pausa. M sonido.', 14, y, W - 28, C.lav, { lh: 10 });
+    if (blink()) G.text(cx, 'A: VOLVER', 90, 298, C.yellow, { align: 'center' });
   }
 }
 
 // ------------------------------------------------------------ VICTORIA
+let portalCanvas = null;
 class EndScene {
   enter() {
     const r = G.run;
     G.save.data.wins = (G.save.data.wins || 0) + 1; G.save.write();
-    this.t = 0; this.page = 0;
-    this.pages = [
-      'Son las ' + G.clock() + '.\nEl Coco se ha hecho pequeñito... era la sombra del gato del 3ºB.',
-      'Subes las escaleras de puntillas. La luz del salón está encendida.',
-      '—¿Tú sabes qué hora es?\n—Mamá... no te lo vas a creer.'
-    ];
+    this.t = 0;
     const base = Math.floor(r.score);
-    this.lines = [['PUNTOS DEL CAMINO', base], ['VIDA RESTANTE ' + r.hp + ' × 500', r.hp * 500]];
-    if (!r.hits) this.lines.push(['¡SIN UN SOLO GOLPE!', 2000]);
+    this.lines = [['CAMINO', base], ['VIDA ' + r.hp + ' × 500', r.hp * 500]];
+    if (!r.hits) this.lines.push(['SIN GOLPES', 2000]);
     this.total = this.lines.reduce((a, l) => a + l[1], 0);
+    portalCanvas = portalCanvas || G.makeSeg(150, 0, 'portal');
     G.audio.play('dawn');
   }
   update(dt) {
     this.t += dt;
-    if (!G.Input.anyHit() || this.t < 0.3) return;
-    if (this.page < this.pages.length) {
-      const s = this.pages[this.page];
-      if (typed(s, this.t).length < s.length) { this.t = 99; return; }
-      this.page++; this.t = 0; G.audio.sfx('move');
-      return;
-    }
-    if (this.t < 0.3 + this.lines.length * 0.3) { this.t = 99; return; }
+    if (!G.Input.anyHit() || this.t < 0.4) return;
+    if (this.t < 0.4 + this.lines.length * 0.3) { this.t = 99; return; }
     G.go(new NameScene(this.total, true));
   }
   draw(cx) {
-    const k = Math.min(1, this.page / this.pages.length);
-    G.rect(cx, 0, 0, W, H, '#0b0b1a');
-    const sky = ['#0b0b1a', '#1d2b53', '#7e2553', '#ff77a8', '#ffa300'];
-    const bands = Math.round(k * 4);
-    for (let i = 0; i <= bands; i++) G.rect(cx, 0, 120 - i * 24, W, 24, sky[Math.min(4, bands - i)]);
-    art.skyline(cx, W, 140, 3, '#141020', '#ffd27a');
-    art.cobbles(cx, 0, 140, W, 40);
-    G.rect(cx, 174, 112, 30, 48, '#2a1a10'); G.rect(cx, 176, 114, 26, 46, '#ffd27a');
-    G.drawFeet(cx, 'chico0', 150, 160, false);
-    if (this.page < this.pages.length) {
-      art.panel(cx, 16, 18, W - 32, 62, '#000000e0', C.yellow);
-      G.textBox(cx, typed(this.pages[this.page], this.t), 26, 28, W - 52, C.white, { lh: 11 });
-      return;
-    }
-    art.panel(cx, 40, 16, 240, 150, '#111d35', C.yellow);
-    G.text(cx, '¡HAS LLEGADO A CASA!', 160, 26, C.yellow, { align: 'center', shadow: true });
+    G.rect(cx, 0, 0, W, H, C.night);
+    cx.drawImage(portalCanvas, 0, 0);
+    cx.globalAlpha = 0.25; G.rect(cx, 0, 0, W, 150, C.orange); cx.globalAlpha = 1;
+    G.drawFeet(cx, 'chicoBack0', 90, 84, false);
+    art.panel(cx, 12, 108, W - 24, 196, '#111d35', C.yellow);
+    G.textBox(cx, '¡HAS LLEGADO A CASA!', 20, 118, W - 40, C.yellow, { align: 'center', shadow: true });
     const n = Math.min(this.lines.length, Math.floor(this.t / 0.3));
-    this.lines.slice(0, n).forEach(([a, b], i) => { G.text(cx, a, 52, 46 + i * 12, C.white); G.text(cx, String(b), 268, 46 + i * 12, C.green, { align: 'right' }); });
+    this.lines.slice(0, n).forEach(([a, b], i) => { G.text(cx, a, 22, 140 + i * 14, C.white); G.text(cx, String(b), W - 22, 140 + i * 14, C.green, { align: 'right' }); });
     if (n >= this.lines.length) {
-      G.rect(cx, 52, 48 + n * 12, 216, 1, '#4a4a6a');
-      G.text(cx, 'TOTAL ' + this.total, 160, 56 + n * 12, C.yellow, { align: 'center', scale: 2, shadow: true });
-      G.text(cx, G.run.coins + ' MONEDAS · LLEGADA ' + G.clock(), 160, 130, C.lav, { align: 'center' });
-      if (Math.floor(G.time * 3) % 2) G.text(cx, 'PULSA A PARA GUARDAR TU NOMBRE', 160, 150, C.white, { align: 'center' });
+      const y = 144 + n * 14;
+      G.rect(cx, 22, y, W - 44, 1, '#4a4a6a');
+      G.text(cx, 'TOTAL', 90, y + 8, C.lav, { align: 'center' });
+      G.text(cx, String(this.total), 90, y + 20, C.yellow, { align: 'center', scale: 2, shadow: true });
+      G.text(cx, G.run.coins + ' MONEDAS', 90, y + 42, C.lav, { align: 'center' });
+      if (blink()) G.textBox(cx, 'PULSA A PARA GUARDAR TU NOMBRE', 20, 278, W - 40, C.white, { align: 'center' });
     }
   }
 }
 G.EndScene = EndScene;
 
-// ------------------------------------------------------------ FIN DE LA NOCHE
+// ------------------------------------------------------------ FIN DE LA PARTIDA
 class GameOverScene {
   enter() { this.t = 0; G.audio.play('dead'); this.total = Math.floor(G.run.score); }
   update(dt) { this.t += dt; if (this.t > 1 && G.Input.anyHit()) G.go(new NameScene(this.total, false)); }
   draw(cx) {
-    G.rect(cx, 0, 0, W, H, '#0a0510');
-    art.stars(cx, W, H, 66, G.time);
-    G.drawScaled(cx, 'chicoHurt', 145, 118, 3);
-    G.text(cx, 'FIN DE LA NOCHE', 160, 18, C.red, { align: 'center', scale: 3, shadow: true, outline: true });
-    G.textBox(cx, G.run.cause || 'Te quedaste por el camino.', 30, 48, 260, C.white, { align: 'center', lh: 10 });
-    G.text(cx, 'LLEGASTE AL TRAMO ' + G.run.stage + ' DE ' + G.STAGES + ' · ' + G.run.coins + ' MONEDAS', 160, 80, C.lav, { align: 'center' });
-    G.text(cx, 'PUNTOS: ' + this.total, 160, 94, C.yellow, { align: 'center', scale: 2, shadow: true });
-    if (this.t > 1 && Math.floor(G.time * 3) % 2) G.text(cx, 'PULSA A PARA GUARDAR TU NOMBRE', 160, 168, C.white, { align: 'center' });
+    night(cx, 66);
+    G.text(cx, 'SE ACABÓ', 90, 30, C.red, { align: 'center', scale: 3, shadow: true, outline: true });
+    G.drawScaled(cx, 'chicoHurt', 75, 70, 3);
+    G.textBox(cx, G.run.cause || 'Te quedaste por el camino.', 14, 126, W - 28, C.white, { align: 'center', lh: 10 });
+    G.text(cx, 'TRAMO ' + G.run.stage + ' DE ' + G.STAGES, 90, 174, C.lav, { align: 'center' });
+    G.text(cx, G.run.coins + ' MONEDAS', 90, 186, C.lav, { align: 'center' });
+    G.text(cx, 'PUNTOS', 90, 206, C.yellow, { align: 'center' });
+    G.text(cx, String(this.total), 90, 218, C.yellow, { align: 'center', scale: 2, shadow: true });
+    if (this.t > 1 && blink()) G.textBox(cx, 'PULSA A PARA GUARDAR TU NOMBRE', 20, 280, W - 40, C.white, { align: 'center' });
   }
 }
 G.GameOverScene = GameOverScene;
 
 // ------------------------------------------------------------ ESCRIBIR NOMBRE (estilo recreativa)
 const KEYS = ['ABCDEFGHIJ', 'KLMNÑOPQRS', 'TUVWXYZ-.!', '0123456789'];
-const MAXN = 10;
+const MAXN = 10, KX = 16, KY = 124, KW = 15, KH = 18;
+const BTNS = [['ESPACIO', 12, 54], ['BORRAR', 70, 46], ['OK', 120, 48]];
 class NameScene {
   constructor(score, won) { this.score = score; this.won = won; }
   enter() {
@@ -292,7 +234,7 @@ class NameScene {
     G.save.data.lastName = nm; G.save.write();
     G.audio.sfx('ok');
     const r = G.run;
-    const entry = { name: nm, score: this.score, won: this.won, row: r.won ? G.STAGES + 1 : r.stage, time: G.clock(), date: new Date().toISOString().slice(0, 10) };
+    const entry = { name: nm, score: this.score, won: this.won, row: r.won ? G.STAGES + 1 : r.stage, time: '', date: new Date().toISOString().slice(0, 10) };
     G.scores.submit(entry);
     G.go(new RankingScene(entry));
   }
@@ -314,35 +256,34 @@ class NameScene {
     const tp = I.tap;
     if (tp) {
       for (let j = 0; j < 4; j++) for (let i = 0; i < 10; i++) {
-        const x = 78 + i * 17, y = 72 + j * 16;
-        if (tp.x >= x - 2 && tp.x < x + 14 && tp.y >= y - 3 && tp.y < y + 12) { this.cx = i; this.cy = j; this.press(); return; }
+        const x = KX + i * KW, y = KY + j * KH;
+        if (tp.x >= x && tp.x < x + KW && tp.y >= y - 3 && tp.y < y + KH - 3) { this.cx = i; this.cy = j; this.press(); return; }
       }
-      [[70, 54], [138, 50], [202, 48]].forEach(([x, w], i) => { if (tp.x >= x && tp.x < x + w && tp.y >= 136 && tp.y < 150) { this.cy = 4; this.bx = i; this.press(); } });
+      BTNS.forEach(([, x, w], i) => { if (tp.x >= x && tp.x < x + w && tp.y >= 206 && tp.y < 222) { this.cy = 4; this.bx = i; this.press(); } });
       return;
     }
     if (I.hit('a')) this.press();
   }
   draw(cx) {
-    G.rect(cx, 0, 0, W, H, C.night);
-    art.stars(cx, W, H, 99, G.time);
-    G.text(cx, this.won ? '¡HAS VUELTO A CASA!' : 'GUARDA TU PUNTUACIÓN', 160, 10, this.won ? C.yellow : C.lav, { align: 'center', shadow: true });
-    G.text(cx, String(this.score), 160, 22, C.green, { align: 'center', scale: 2, shadow: true });
-    G.text(cx, 'PUNTOS', 160, 40, C.green, { align: 'center' });
-    // casilla del nombre
-    art.panel(cx, 90, 50, 140, 15, '#000', C.yellow);
-    if (this.fresh && this.name) G.rect(cx, 95, 52, G.textW(this.name) + 2, 10, '#29adff80');
-    G.text(cx, this.name + (Math.floor(G.time * 3) % 2 && this.name.length < MAXN ? '_' : ''), 96, 54, C.white);
+    night(cx, 99);
+    G.textBox(cx, this.won ? '¡HAS VUELTO A CASA!' : 'GUARDA TU PUNTUACIÓN', 10, 26, W - 20, this.won ? C.yellow : C.lav, { align: 'center', shadow: true });
+    G.text(cx, String(this.score), 90, 46, C.green, { align: 'center', scale: 2, shadow: true });
+    G.text(cx, 'PUNTOS', 90, 64, C.green, { align: 'center' });
+    G.text(cx, 'TU NOMBRE:', 20, 84, C.lav);
+    art.panel(cx, 16, 94, W - 32, 15, '#000', C.yellow);
+    if (this.fresh && this.name) G.rect(cx, 21, 97, G.textW(this.name) + 2, 10, '#29adff80');
+    G.text(cx, this.name + (blink() && this.name.length < MAXN ? '_' : ''), 22, 98, C.white);
     for (let j = 0; j < 4; j++) for (let i = 0; i < 10; i++) {
-      const x = 78 + i * 17, y = 72 + j * 16, sel = this.cy === j && this.cx === i;
-      G.rect(cx, x - 2, y - 3, 15, 13, sel ? C.yellow : '#1a1a33');
-      G.text(cx, KEYS[j][i], x + 5, y, sel ? C.ink : C.white, { align: 'center' });
+      const x = KX + i * KW, y = KY + j * KH, sel = this.cy === j && this.cx === i;
+      G.rect(cx, x + 1, y - 3, KW - 2, KH - 4, sel ? C.yellow : '#1a1a33');
+      G.text(cx, KEYS[j][i], x + KW / 2, y + 1, sel ? C.ink : C.white, { align: 'center' });
     }
-    [['ESPACIO', 70, 54], ['BORRAR', 138, 50], ['OK', 202, 48]].forEach(([l, x, w], i) => {
+    BTNS.forEach(([l, x, w], i) => {
       const sel = this.cy === 4 && this.bx === i;
-      G.rect(cx, x, 136, w, 14, sel ? (i === 2 ? C.green : C.yellow) : '#1a1a33');
-      G.text(cx, l, x + w / 2, 140, sel ? C.ink : i === 2 ? C.green : C.white, { align: 'center' });
+      G.rect(cx, x, 206, w, 16, sel ? (i === 2 ? C.green : C.yellow) : '#1a1a33');
+      G.text(cx, l, x + w / 2, 211, sel ? C.ink : i === 2 ? C.green : C.white, { align: 'center' });
     });
-    G.text(cx, G.Input.lastDevice === 'touch' ? 'TOCA LAS LETRAS · OK PARA GUARDAR' : 'ESCRIBE CON EL TECLADO · ENTER PARA GUARDAR', 160, 162, '#8a8aa8', { align: 'center' });
+    G.textBox(cx, G.Input.lastDevice === 'touch' ? 'TOCA LAS LETRAS Y LUEGO OK' : 'ESCRIBE CON EL TECLADO Y PULSA ENTER', 14, 244, W - 28, '#9a9ab8', { align: 'center' });
   }
 }
 
@@ -388,38 +329,35 @@ class RankingScene {
   }
   update(dt) {
     this.t += dt;
-    if (G.Input.hit('left') || G.Input.hit('right') || (G.Input.tap && G.Input.tap.y < 30)) { this.tab = this.tab === 'global' ? 'local' : 'global'; G.audio.sfx('move'); return; }
-    if ((G.Input.hit('a') || G.Input.hit('b') || (G.Input.tap && G.Input.tap.y > 150)) && this.t > 0.4) G.go(new TitleScene());
+    if (G.Input.hit('left') || G.Input.hit('right') || (G.Input.tap && G.Input.tap.y < 60)) { this.tab = this.tab === 'global' ? 'local' : 'global'; G.audio.sfx('move'); return; }
+    if ((G.Input.hit('a') || G.Input.hit('b') || (G.Input.tap && G.Input.tap.y > 280)) && this.t > 0.4) G.go(new TitleScene());
   }
   draw(cx) {
-    G.rect(cx, 0, 0, W, H, C.night);
-    art.stars(cx, W, H, 17, G.time);
-    G.text(cx, 'RÉCORDS', 160, 6, C.yellow, { align: 'center', scale: 2, shadow: true });
-    const tabs = [['global', 'MUNDIAL'], ['local', 'ESTE DISPOSITIVO']];
-    tabs.forEach(([k, l], i) => {
-      const x = i ? 196 : 104, sel = this.tab === k;
-      G.text(cx, l, x, 26, sel ? C.yellow : '#6a6a8a', { align: 'center', shadow: true });
-      if (sel) G.rect(cx, x - G.textW(l) / 2, 34, G.textW(l), 1, C.yellow);
+    night(cx, 17);
+    G.text(cx, 'RÉCORDS', 90, 14, C.yellow, { align: 'center', scale: 2, shadow: true });
+    [['global', 'MUNDIAL', 50], ['local', 'ESTE MÓVIL', 128]].forEach(([k, l, x]) => {
+      const sel = this.tab === k;
+      G.text(cx, l, x, 40, sel ? C.yellow : '#6a6a8a', { align: 'center', shadow: true });
+      if (sel) G.rect(cx, x - G.textW(l) / 2, 49, G.textW(l), 1, C.yellow);
     });
-    art.panel(cx, 20, 40, 280, 116, '#111d35', '#83769c');
-    let list = this.tab === 'global' ? this.global : G.scores.local();
-    if (this.tab === 'global' && this.loading) { G.text(cx, 'CARGANDO...', 160, 90, C.lav, { align: 'center' }); }
-    else if (this.tab === 'global' && !list) { G.textBox(cx, 'El ranking mundial no está disponible ahora mismo. Tus puntos se guardan en este dispositivo.', 34, 80, 252, C.lav, { align: 'center', lh: 10 }); }
-    else if (!list || !list.length) { G.text(cx, 'TODAVÍA NO HAY NADIE. ¡SÉ EL PRIMERO!', 160, 90, C.lav, { align: 'center' }); }
+    art.panel(cx, 6, 58, W - 12, 222, '#111d35', '#83769c');
+    const list = this.tab === 'global' ? this.global : G.scores.local();
+    if (this.tab === 'global' && this.loading) G.text(cx, 'CARGANDO...', 90, 160, C.lav, { align: 'center' });
+    else if (this.tab === 'global' && !list) G.textBox(cx, 'El ranking mundial no está disponible aquí. Tus puntos se guardan en este dispositivo.', 16, 140, W - 32, C.lav, { align: 'center', lh: 10 });
+    else if (!list || !list.length) G.textBox(cx, 'TODAVÍA NO HAY NADIE. ¡SÉ EL PRIMERO!', 16, 160, W - 32, C.lav, { align: 'center' });
     else {
-      G.text(cx, '#', 30, 46, '#6a6a8a'); G.text(cx, 'NOMBRE', 46, 46, '#6a6a8a'); G.text(cx, 'LLEGÓ', 196, 46, '#6a6a8a', { align: 'center' }); G.text(cx, 'PUNTOS', 290, 46, '#6a6a8a', { align: 'right' });
       list.slice(0, 10).forEach((e, i) => {
-        const y = 57 + i * 10;
-        const me = this.entry && e.name === this.entry.name && e.score === this.entry.score && e.time === this.entry.time;
-        const col = me ? (Math.floor(G.time * 4) % 2 ? C.yellow : C.white) : i === 0 ? C.yellow : C.white;
-        if (me) G.rect(cx, 24, y - 2, 272, 9, '#ffec2722');
-        G.text(cx, String(i + 1), 30, y, col);
-        G.text(cx, String(e.name).slice(0, 12), 46, y, col);
-        G.text(cx, e.won ? '★ ' + (e.time || '') : 'TRAMO ' + (e.row || 0), 196, y, e.won ? C.green : '#8a8aa8', { align: 'center' });
-        G.text(cx, String(e.score), 290, y, col, { align: 'right' });
+        const y = 68 + i * 20;
+        const me = this.entry && e.name === this.entry.name && e.score === this.entry.score && e.date === this.entry.date;
+        const col = me ? (blink() ? C.yellow : C.white) : i === 0 ? C.yellow : C.white;
+        if (me) G.rect(cx, 9, y - 3, W - 18, 19, '#ffec2722');
+        G.text(cx, String(i + 1), 18, y, col, { align: 'right' });
+        G.text(cx, String(e.name).slice(0, 12), 24, y, col);
+        G.text(cx, String(e.score), W - 12, y, col, { align: 'right' });
+        G.text(cx, e.won ? '★ LLEGÓ A CASA' : 'TRAMO ' + (e.row || 0) + ' DE ' + G.STAGES, 24, y + 9, e.won ? C.green : '#8a8aa8');
       });
     }
-    G.text(cx, '← → CAMBIAR   A: VOLVER', 160, 164, C.lav, { align: 'center' });
+    G.textBox(cx, '← → CAMBIAR · A: VOLVER', 10, 292, W - 20, C.lav, { align: 'center' });
   }
 }
 G.RankingScene = RankingScene;
@@ -427,7 +365,7 @@ G.RankingScene = RankingScene;
 // accesos directos para probar pantallas sueltas (?scene=...)
 G.debugScenes = {
   end: () => new EndScene(), over: () => { G.run.cause = 'Los zombis te rodearon.'; return new GameOverScene(); },
-  name: () => new NameScene(4321, true), rank: () => new RankingScene(null), intro: () => new IntroScene(),
+  name: () => new NameScene(4321, true), rank: () => new RankingScene(null),
   howto: () => new HowToScene(), game: () => new G.GameScene()
 };
 })();

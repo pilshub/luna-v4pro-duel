@@ -1,6 +1,6 @@
 # El Retorno
 
-Juego arcade en pixel art: la calle avanza sola y tienes que llevar al chico a casa esquivando todo lo que sale de repente en una ciudad española de noche.
+Juego arcade en pixel art y formato vertical (9:16): la calle sube sola y tienes que llevar al chico a casa esquivando todo lo que sale de repente en una ciudad española de noche. Pulsas JUGAR y empiezas.
 
 Cada partida es distinta: se eligen al azar 6 tramos entre 9 peligros, en orden aleatorio, con calles y patrones de ataque generados al momento. Al final te espera El Coco en tu portal.
 
@@ -9,7 +9,7 @@ Cada partida es distinta: se eligen al azar 6 tramos entre 9 peligros, en orden 
 | ¡Zombis! | Vecinos que salen del suelo y te persiguen |
 | ¡El vampiro! | Murciélagos y picados del vampiro sobre tu sombra |
 | ¡Un volcán! | Volcanes que brotan del asfalto y lanzan lava |
-| ¡Encierro fantasma! | Toros, taxis y el búho cruzando a toda velocidad |
+| ¡Encierro! | Toros, taxis y un autobús fantasma cruzando la calle |
 | ¡Fantasmas! | Fantasmas y macetas que caen de los balcones |
 | ¡La Santa Compaña! | Niebla y procesiones de ánimas |
 | ¡La meiga! | Rayos con aviso desde su escoba |
@@ -48,4 +48,4 @@ python3 -m http.server 8000
 # abre http://localhost:8000
 ```
 
-Atajos de prueba: `?tema=zombis,volcan` empieza con esos tramos, `?tema=coco` va directo al jefe, `?scene=end|over|name|rank`.
+Atajos de prueba: `?tema=zombis,volcan` empieza con esos tramos, `?tema=coco` va directo al jefe, `?scene=end|over|name|rank|howto`.

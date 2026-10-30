@@ -22,17 +22,11 @@ const chicoTop = [
 S('chico0', chicoTop.concat(['...mmmm...', '...m..m...', '...m..m...', '..77..77..']));
 S('chico1', chicoTop.concat(['...mmmm...', '..mm..m...', '..m....m..', '.77....77.']));
 S('chico2', chicoTop.concat(['...mmmm...', '...mmm....', '...m.m....', '..77.77...']));
-S('chicoJump', chicoTop.concat(['..mmmmm...', '.mm...mm..', '.77....77.', '..........']));
-S('chicoSlide', [
-  '.........gggg.',
-  '........gggggg',
-  '...8888.ggff0f',
-  '998888888ffff.',
-  '99888888lfff..',
-  'mmmmm888l.....',
-  '7mmmm.........',
-  '77............'
-]);
+// de espaldas (vista desde arriba, caminando calle arriba)
+const backTop = ['...gggg...', '..gggggg..', '.gggggggg.', '.gggggggg.', '.gggggggg.', '..gggggg..', '...ffff...', '..899998..', '.88999988.', '.f899998f.', '..899998..', '...mmmm...'];
+S('chicoBack0', backTop.concat(['...m..m...', '...m..m...', '...7..7...']));
+S('chicoBack1', backTop.concat(['...m..m...', '...7..m...', '......7...']));
+S('chicoBack2', backTop.concat(['...m..m...', '...m..7...', '...7......']));
 S('chicoHurt', [
   '...gggg...', '..gggggg..', '.gggggggg.', '.ggg0ff0g.', '.ggff0ff..', '..gf00ff..',
   '8.988888.8', '8998888888', '.99888888.', '.99888ll..', '..8llll...', '...mmmm...', '..mm..mm..', '.mm....mm.', '77......77'
@@ -54,7 +48,6 @@ const zTop = [
 ];
 S('zombie0', zTop.concat(['..5555....', '..55.55...', '..5...5...', '.44...44..']));
 S('zombie1', zTop.concat(['..5555....', '..555.....', '..5.5.....', '.44.44....']));
-S('zombieRise', ['..........', '..........', '..........', '..........', '..........', '..........', '..........', '..........', 'j...jj..j.', 'jj.jjjj.jj', '.jjjjjjjj.', '..jj8j8j..', '.444444444', '4545454544', '.45454545.']);
 
 // ------------------------------------------------------------ vampiro y murciélagos
 S('vampire', M([
@@ -69,8 +62,6 @@ S('ghost', M(['...77', '..777', '.7777', '.7077', '.6777', '67777', '67770', '67
 S('ghostAngry', M(['...77', '..777', '.7777', '.7807', '.6777', '67777', '67700', '67700', '67777', '6.777']));
 
 // ------------------------------------------------------------ abuela en la ventana y maceta
-S('abuela', M(['....66', '...666', '..6666', '.66666', '.6ffff', '.6f0c0', '.6ffff', '..fff8', '...fff', '..eeee', '.eeeee', 'eeeeee']));
-S('abuelaAngry', M(['....66', '...666', '..6666', '.66666', '.6f0ff', '.6ff0c', '.6ffff', '..ff00', '...fff', '..eeee', 'feeeee', 'feeeee']));
 S('maceta', ['..8.8..', '.888b8.', '..b8bb.', '..bbb..', '.44444.', '4444444', '.44444.', '..444..']);
 
 // ------------------------------------------------------------ toro fantasma (encierro)
@@ -91,11 +82,6 @@ S('meiga', M([
   '......2', '.....22', '.....22', '....222', '....222', '...2222', '..22299', '2222222',
   '..hhjjj', '..hhj0j', '..hhjjj', '..hhjj3', '..hhj00', '...2222', '..22222', '.222d22', '.222222', '2222222'
 ]));
-S('meigaZap', M([
-  '......2', '.....22', '.....22', '....222', '....222', '...2222', '..22299', '2222222',
-  '..hhjjj', '..hhj8j', '..hhjjj', '..hhjj3', '..hhj80', 'j..2222', 'jj22222', '.222d22', '.222222', '2222222'
-]));
-
 // ------------------------------------------------------------ tuno zombi
 const tunaTop = ['...2222.....', '..jjjjj.....', '..jjj8j8....', '..jjjjjj....', '...jj00j....', '..77777.....', '.0000000....'];
 S('tuna0', tunaTop.concat(['e0000000a...', 'c000044444..', 'b0000444j444', 'e0000044....', 'a0000000....', '..00..00....', '..00..00....', '..00..00....', '.000..000...']));
@@ -132,9 +118,7 @@ S('cat', ['.0.0......', '.000......', '0a0a0...0.', '.000....0.', '.0000000..', 
 S('coin', ['.aaaa.', 'aa77aa', 'a7aa9a', 'aaaa9a', 'aa99aa', '.aaaa.']);
 S('heart', ['.88.88.', '8e88888', '8888888', '.88888.', '..888..', '...8...']);
 S('heartE', ['.55.55.', '5..5..5', '5.....5', '.5...5.', '..5.5..', '...5...']);
-S('heartG', ['.aa.aa.', 'a7aaaaa', 'aaaaaaa', '.aaaaa.', '..aaa..', '...a...']);
 S('chanclaP', ['.cccc..', 'cc1ccc6', 'c1c1c66', '.cccc66']);
-S('arrowR', ['..a..', '..aa.', 'aaaaa', '..aa.', '..a..']);
 
 // ------------------------------------------------------------ iconos de objetos (10x10)
 const IC = {
@@ -153,11 +137,7 @@ const MI = {
   tuna: ['.......55', '......55.', '.....4...', '..4444...', '.444444..', '.440444..', '.444444..', '..4444...'],
   compana: ['....a....', '...a9a...', '...a9a...', '....9....', '...777...', '...777...', '...767...', '...777...', '..66666..'],
   tejados: ['......55.', '......55.', '...44455.', '..444444.', '.44444444', '444444444', '.7777777.', '.7a777a77'],
-  shop: ['878787878', '878787878', '.7777777.', '.7a7c7e7.', '.7777777.', '.7444447.', '.7777777.'],
-  rest: ['....c....', '...c.c...', '..c.6.c..', '....6....', '.6666666.', '.6ccccc6.', '..66666..'],
-  event: ['..aaaaa..', '.aa...aa.', '......aa.', '....aaa..', '...aa....', '.........', '...aa....'],
   boss: ['..11111..', '.1111111.', '11aa1aa11', '11a01a011', '111111111', '107070701', '.1111111.', '..1.1.1..'],
-  home: ['....8....', '...888...', '..88888..', '.8888888.', '..77777..', '..7a747..', '..77747..']
 };
 for (const k in MI) S('mi_' + k, MI[k]);
 
@@ -228,121 +208,6 @@ const SHOPS = [
   { t: 'MERCERÍA', bg: '#3a1a2a', fg: '#ff77a8' }, { t: 'TABERNA', bg: '#3a1010', fg: '#ffa300' }
 ];
 art.SHOPS = SHOPS;
-art.facade = (cx, x, y, w, h, seed, o = {}) => {
-  const r = G.srand(seed);
-  const wall = o.wall || WALLS[r() * WALLS.length | 0];
-  G.rect(cx, x, y, w, h, wall);
-  // textura de pared
-  for (let i = 0; i < w * h / 40; i++) G.rect(cx, x + r() * w, y + r() * h, 1, 1, '#00000030');
-  // cornisa
-  G.rect(cx, x, y, w, 3, '#2a2240');
-  G.rect(cx, x, y + 3, w, 1, '#5a5070');
-  const groundH = o.groundH || 30;
-  const floors = Math.max(1, Math.floor((h - groundH - 6) / 24));
-  const cols = Math.max(1, Math.floor((w - 6) / 22));
-  const gap = (w - cols * 10) / (cols + 1);
-  for (let f = 0; f < floors; f++) {
-    const wy = y + 8 + f * 24;
-    for (let c = 0; c < cols; c++) {
-      const wx = Math.round(x + gap + c * (10 + gap));
-      const lit = r() < (o.lit === undefined ? 0.28 : o.lit);
-      G.rect(cx, wx - 1, wy - 1, 12, 16, '#1a1428');
-      if (lit) {
-        G.rect(cx, wx, wy, 10, 14, '#ffd27a');
-        G.rect(cx, wx, wy, 10, 5 + (r() * 6 | 0), '#8a6a30');
-        G.rect(cx, wx + 4, wy, 2, 14, '#c89a4a');
-      } else {
-        G.rect(cx, wx, wy, 10, 14, r() < 0.5 ? '#2f4a3a' : '#4a3a2a');
-        for (let k = 1; k < 14; k += 2) G.rect(cx, wx, wy + k, 10, 1, '#00000040');
-      }
-      if (r() < 0.65) { // balcón de forja
-        G.rect(cx, wx - 3, wy + 14, 16, 2, '#2a2a3a');
-        G.rect(cx, wx - 3, wy + 9, 16, 1, '#111');
-        for (let b = 0; b < 16; b += 3) G.rect(cx, wx - 3 + b, wy + 9, 1, 5, '#111');
-        if (r() < 0.3) { G.rect(cx, wx + 10, wy + 6, 4, 3, '#ab5236'); G.rect(cx, wx + 10, wy + 4, 4, 2, r() < 0.5 ? '#ff004d' : '#00e436'); }
-      }
-      if (r() < 0.08) { G.rect(cx, wx - 1, wy - 6, 12, 3, '#8a1a2a'); } // toldo
-    }
-  }
-  // bajo comercial
-  const gy = y + h - groundH;
-  G.rect(cx, x, gy, w, 2, '#2a2240');
-  if (o.shop !== false && w >= 48) {
-    const shop = o.shopType ? SHOPS.find(s => s.t === o.shopType) || SHOPS[0] : SHOPS[r() * SHOPS.length | 0];
-    const tw = G.textW(shop.t);
-    const sw = Math.min(w - 6, tw + 8);
-    const sx = Math.round(x + (w - sw) / 2);
-    G.rect(cx, sx, gy + 3, sw, 11, shop.bg);
-    G.frame(cx, sx, gy + 3, sw, 11, '#00000080');
-    if (tw <= sw - 4) G.text(cx, shop.t, sx + sw / 2, gy + 5, shop.fg, { align: 'center' });
-    if (shop.cross) { const cxp = sx + sw + 4; if (cxp + 7 < x + w) { G.rect(cx, cxp + 2, gy + 3, 3, 9, C.green); G.rect(cx, cxp, gy + 5, 7, 3, C.green); } }
-    // persiana metálica bajada
-    const pw = Math.min(w - 10, 44), px = Math.round(x + (w - pw) / 2);
-    G.rect(cx, px, gy + 16, pw, groundH - 16, '#6a6a7a');
-    for (let k = gy + 17; k < y + h; k += 2) G.rect(cx, px, k, pw, 1, '#4a4a5a');
-    if (r() < 0.5) { // grafiti
-      const gc = G.pick([C.pink, C.blue, C.lime, C.orange]);
-      for (let k = 0; k < 6; k++) G.rect(cx, px + 4 + r() * (pw - 10), gy + 19 + r() * (groundH - 22), 3 + r() * 4, 1, gc);
-    }
-  } else {
-    // portal
-    const dx = Math.round(x + w / 2 - 7);
-    G.rect(cx, dx, gy + 6, 14, groundH - 6, '#2a1a10');
-    G.rect(cx, dx + 1, gy + 7, 12, groundH - 7, '#5a3a20');
-    G.rect(cx, dx + 6, gy + 7, 1, groundH - 7, '#2a1a10');
-    G.rect(cx, dx + 9, gy + 16, 2, 2, C.yellow);
-  }
-};
-
-// farola fernandina
-art.lamp = (cx, x, groundY, on = true, h = 46) => {
-  x = Math.round(x);
-  G.rect(cx, x - 2, groundY - 4, 5, 4, '#1a1a24');
-  G.rect(cx, x, groundY - h, 1, h, '#1a1a24');
-  G.rect(cx, x - 1, groundY - h + 10, 3, 1, '#1a1a24');
-  G.rect(cx, x - 4, groundY - h - 2, 9, 2, '#1a1a24');
-  G.rect(cx, x - 3, groundY - h - 9, 7, 7, '#1a1a24');
-  G.rect(cx, x - 2, groundY - h - 8, 5, 5, on ? '#ffd27a' : '#3a3a4a');
-  if (on) G.rect(cx, x - 1, groundY - h - 7, 3, 3, '#fff1e8');
-  G.rect(cx, x - 4, groundY - h - 11, 9, 2, '#1a1a24');
-  G.rect(cx, x, groundY - h - 13, 1, 2, '#1a1a24');
-};
-// farol de pared (callejón)
-art.wallLamp = (cx, x, y, on = true) => {
-  x = Math.round(x); y = Math.round(y);
-  G.rect(cx, x - 6, y - 1, 7, 1, '#111');
-  G.rect(cx, x - 6, y - 4, 1, 4, '#111');
-  G.rect(cx, x - 3, y, 7, 2, '#111');
-  G.rect(cx, x - 2, y + 2, 5, 6, '#111');
-  G.rect(cx, x - 1, y + 3, 3, 4, on ? '#ffd27a' : '#2a2a3a');
-  if (on) G.rect(cx, x, y + 4, 1, 2, C.white);
-};
-// cono de luz (se dibuja con alpha)
-art.lightCone = (cx, x, topY, groundY, r, alpha = 0.18, col = '#ffd27a') => {
-  cx.globalAlpha = alpha;
-  cx.fillStyle = col;
-  const h = groundY - topY;
-  for (let j = 0; j < h; j++) {
-    const w = 2 + (r - 2) * j / h;
-    cx.fillRect(Math.round(x - w), topY + j, Math.round(w * 2), 1);
-  }
-  cx.globalAlpha = 1;
-};
-art.contenedor = (cx, x, y, col = '#2c6a3a') => {
-  G.rect(cx, x, y + 2, 16, 12, col);
-  G.rect(cx, x - 1, y, 18, 3, '#1a1a1a');
-  G.rect(cx, x + 2, y + 5, 12, 1, '#00000040');
-  G.rect(cx, x + 1, y + 14, 3, 2, '#111');
-  G.rect(cx, x + 12, y + 14, 3, 2, '#111');
-};
-art.banco = (cx, x, y) => {
-  G.rect(cx, x, y, 22, 2, '#6a4a2a');
-  G.rect(cx, x, y - 6, 22, 2, '#6a4a2a');
-  G.rect(cx, x, y - 3, 22, 1, '#5a3a20');
-  G.rect(cx, x + 1, y + 2, 2, 4, '#222');
-  G.rect(cx, x + 19, y + 2, 2, 4, '#222');
-};
-
 // -------- vista cenital
 art.cobbles = (cx, x, y, w, h, base = '#2c2a3e', dark = '#24222f', light = '#35334a') => {
   G.rect(cx, x, y, w, h, base);
@@ -400,10 +265,6 @@ art.panel = (cx, x, y, w, h, bg = '#111d35', border = '#fff1e8') => {
   G.rect(cx, x, y + 1, 1, h - 2, border);
   G.rect(cx, x + w - 1, y + 1, 1, h - 2, border);
   G.rect(cx, x + 1, y + h, w - 2, 1, '#00000080');
-};
-art.hearts = (cx, x, y, hp, max) => {
-  for (let i = 0; i < max; i++) G.draw(cx, i < hp ? 'heart' : 'heartE', x + i * 8, y);
-  return max * 8;
 };
 art.icon = (cx, name, x, y, s = 1) => { // centrado en caja 10x10*s
   const sp = G.SPR[name]; if (!sp) return;

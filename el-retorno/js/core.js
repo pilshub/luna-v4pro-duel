@@ -4,7 +4,7 @@
 // =====================================================================
 (function () {
 const G = window.G = {};
-const W = G.W = 320, H = G.H = 180;
+const W = G.W = 180, H = G.H = 320;
 
 // ---------------------------------------------------------------- utils
 G.rand = (a = 1, b) => b === undefined ? Math.random() * a : a + Math.random() * (b - a);
@@ -39,8 +39,8 @@ function resize() {
   // en móvil horizontal se deja hueco a los lados para la cruceta y los botones
   const touch = document.body.classList.contains('touch'), land = window.innerWidth > window.innerHeight;
   let availW = r.width, availH = r.height;
-  if (touch && land) availW = Math.max(W, r.width - 290);
-  if (touch && !land) { availW = window.innerWidth; availH = window.innerHeight * 0.58; }
+  // en vertical se reserva la franja de abajo para el joystick
+  if (touch && !land) { availW = window.innerWidth; availH = Math.max(H, window.innerHeight - 170); }
   let s = Math.min(availW / W, availH / H);
   if (s >= 3) s = Math.floor(s);
   canvas.style.width = Math.floor(W * s) + 'px';

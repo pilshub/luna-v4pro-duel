@@ -11,7 +11,7 @@ const b = document.getElementById('btn-mute');
 if (b) b.textContent = G.audio.muted ? '×' : '♪';
 
 // atajos de prueba: ?tema=zombis,volcan (empieza la partida con esos tramos) · ?tema=coco (directo al jefe)
-//                   ?scene=end|over|name|rank|intro|howto|game
+//                   ?scene=end|over|name|rank|howto|game
 const q = new URLSearchParams(location.search);
 let first = new G.TitleScene();
 const s = q.get('scene');
