@@ -25,7 +25,7 @@ Cada partida es distinta: se eligen al azar 6 tramos entre 9 peligros, en orden 
 ## Puntuación y ranking
 
 Suman puntos los metros recorridos, las monedas, cada tramo superado (más si es sin golpes), cada chanclazo a El Coco y llegar a casa.
-Al acabar escribes tu nombre:
+Al acabar escribes tu nombre, con emotes pixel si quieres (😎 🔥 👑 💀 👻…):
 
 - **Este dispositivo**: siempre, en `localStorage`.
 - **Mundial**: si el proyecto de Vercel tiene una base de datos Redis (Upstash) conectada.
